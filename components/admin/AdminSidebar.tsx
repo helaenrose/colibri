@@ -1,5 +1,6 @@
 import Logo from "../ui/Logo"
 import AdminRoute from "./AdminRoute"
+import LogoutButton from "./LogoutButton"
 
 const adminNavigation = [
     { url: '/admin/orders', text: 'Ordenes pendientes', blank: false },
@@ -33,14 +34,9 @@ export default function AdminSidebar() {
                 </nav>
             </div>
 
-            <form action="/api/admin/logout" method="post" className="pt-3">
-                <button
-                    type="submit"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-                >
-                    Cerrar sesion
-                </button>
-            </form>
+            <div className="pt-3">
+                <LogoutButton />
+            </div>
         </div>
 
     )

@@ -1,16 +1,18 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Notification from "@/components/ui/Notification";
-import { cookies } from "next/headers";
-import { ADMIN_SESSION_COOKIE_NAME, getAdminRoleFromSession } from "@/src/lib/admin-auth";
+import { redirect } from "next/navigation";
+import { getAdminSession } from "@/src/lib/admin-auth";
 
 export default async function AdminLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const cookieStore = await cookies()
-    const sessionToken = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value
-    const adminRole = getAdminRoleFromSession(sessionToken)
+    const session = await getAdminSession()
+
+    if (!session?.user) {
+        redirect('/admin/login')
+    }
 
     return (
         <>
@@ -20,12 +22,6 @@ export default async function AdminLayout({
                 </aside>
 
                 <main className="p-3 sm:p-4 md:flex-1 md:h-screen md:overflow-y-scroll md:p-6" role="main">
-                    {adminRole === 'readonly' ? (
-                        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                            <p className="font-semibold">Modo demo: solo lectura</p>
-                            <p className="mt-1">Puedes recorrer el panel y completar pedidos, pero no crear ni editar productos.</p>
-                        </div>
-                    ) : null}
                     {children}
                 </main>
             </div>
