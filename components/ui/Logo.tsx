@@ -5,6 +5,7 @@ import { getBusinessProfile, getBusinessLogo } from "@/src/lib/business-profile"
 const Logo = async () => {
     const profile = await getBusinessProfile();
     const logoSrc = getBusinessLogo(profile.image);
+    const unoptimized = logoSrc.startsWith("http") && !logoSrc.includes("res.cloudinary.com");
 
     return (
         <Link
@@ -16,6 +17,7 @@ const Logo = async () => {
                 <Image
                     fill
                     priority
+                    unoptimized={unoptimized}
                     alt={`Logotipo de ${profile.name}`}
                     src={logoSrc}
                     sizes="(max-width: 640px) 80px, 96px"

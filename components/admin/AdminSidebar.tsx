@@ -1,6 +1,7 @@
 import Logo from "../ui/Logo"
 import AdminRoute from "./AdminRoute"
 import LogoutButton from "./LogoutButton"
+import { getBusinessProfile } from "@/src/lib/business-profile"
 
 const adminNavigation = [
     { url: '/admin/orders', text: 'Ordenes pendientes', blank: false },
@@ -11,7 +12,8 @@ const adminNavigation = [
     { url: '/order/abarrotes', text: 'Ver catalogo', blank: true },
 ]
 
-export default function AdminSidebar() {
+export default async function AdminSidebar() {
+    const profile = await getBusinessProfile()
 
     return (
         <div className="flex h-full flex-col px-4 py-4 sm:px-5 sm:py-5">
@@ -19,7 +21,7 @@ export default function AdminSidebar() {
                 <Logo />
                 <div className="text-center">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Panel de control</p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Admin FastFood</h2>
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">{profile.name}</h2>
                     <p className="mt-2 text-sm text-slate-600">Gestiona productos y pedidos desde un solo lugar.</p>
                 </div>
             </div>
