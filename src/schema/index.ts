@@ -51,10 +51,39 @@ export const ProductSchema = z.object({
     image: z.string().min(1, "La imagen es obligatoria")
 })
 
+export const CategoryLevelEnum = z.enum(['DEPARTMENT', 'CATEGORY', 'SUBCATEGORY'])
+
 export const CategorySchema = z.object({
     name: z.string()
         .trim()
-        .min(2, { message: 'El nombre de la categoria debe tener al menos 2 caracteres' })
+        .min(2, { message: 'El nombre debe tener al menos 2 caracteres' }),
+    level: CategoryLevelEnum,
+    parentId: z.string().trim().optional().or(z.literal('')),
+    code: z.string().trim().optional().or(z.literal('')),
+}).superRefine((data, ctx) => {
+    // Departamento no tiene padre; categoria y subcategoria si
+    if (data.level !== 'DEPARTMENT' && (!data.parentId || data.parentId.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['parentId'],
+            message: 'Debes seleccionar la categoria padre',
+        })
+    }
+    // El codigo es obligatorio unicamente en subcategorias
+    if (data.level === 'SUBCATEGORY' && (!data.code || data.code.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['code'],
+            message: 'El codigo de subcategoria es obligatorio',
+        })
+    }
+})
+
+export const CategoryImportRowSchema = z.object({
+    department: z.string().trim().min(1, { message: 'El departamento es obligatorio' }),
+    category: z.string().trim().min(1, { message: 'La categoria es obligatoria' }),
+    subcategory: z.string().trim().min(1, { message: 'La subcategoria es obligatoria' }),
+    code: z.string().trim().min(1, { message: 'El codigo de subcategoria es obligatorio' }),
 })
 
 export const BankAccountSchema = z.object({

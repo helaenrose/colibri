@@ -81,22 +81,22 @@ const initialPendingOrders: DemoOrder[] = [
         id: 'demo-order-product-1',
         quantity: 2,
         product: {
-          id: 'cat-abarrotes-0',
+          id: 'sub-arroz-blanco-0',
           name: 'Arroz Blanco 1 kg',
           price: 1.5,
           image: 'arroz',
-          categoryId: 'cat-abarrotes',
+          categoryId: 'sub-arroz-blanco',
         },
       },
       {
         id: 'demo-order-product-2',
         quantity: 1,
         product: {
-          id: 'cat-abarrotes-1',
+          id: 'sub-aceite-vegetal-2',
           name: 'Aceite Vegetal 1 L',
           price: 2.8,
           image: 'aceite',
-          categoryId: 'cat-abarrotes',
+          categoryId: 'sub-aceite-vegetal',
         },
       },
     ],
@@ -122,22 +122,22 @@ const initialReadyOrders: DemoOrder[] = [
         id: 'demo-order-ready-product-1',
         quantity: 1,
         product: {
-          id: 'cat-bebidas-3',
+          id: 'sub-refresco-cola-4',
           name: 'Refresco de Cola 2 L',
           price: 2.2,
           image: 'refresco_cola',
-          categoryId: 'cat-bebidas',
+          categoryId: 'sub-refresco-cola',
         },
       },
       {
         id: 'demo-order-ready-product-2',
         quantity: 1,
         product: {
-          id: 'cat-limpieza-5',
+          id: 'sub-jabon-6',
           name: 'Jabon de Barra',
           price: 0.75,
           image: 'jabon',
-          categoryId: 'cat-limpieza',
+          categoryId: 'sub-jabon',
         },
       },
     ],
@@ -173,6 +173,31 @@ export const getDemoProductById = (id: string) => state.products.find((product) 
 
 export const getDemoProductsByCategory = (slug: string) =>
   state.products.filter((product) => product.category.slug === slug)
+
+export const getDemoDepartments = () =>
+  state.categories.filter((category) => category.level === 'DEPARTMENT')
+
+export const getDemoCategoryBySlug = (slug: string) =>
+  state.categories.find((category) => category.slug === slug)
+
+// Ids de un nodo + todos sus descendientes
+const demoDescendantIds = (rootId: string): string[] => {
+  const result: string[] = []
+  const walk = (id: string) => {
+    result.push(id)
+    state.categories.filter((c) => c.parentId === id).forEach((c) => walk(c.id))
+  }
+  walk(rootId)
+  return result
+}
+
+// Productos de una categoria y de todos sus descendientes (con stock disponible)
+export const getDemoProductsByCategoryTree = (slug: string) => {
+  const root = state.categories.find((c) => c.slug === slug)
+  if (!root) return []
+  const ids = new Set(demoDescendantIds(root.id))
+  return state.products.filter((product) => ids.has(product.categoryId) && product.stock > 0)
+}
 
 export const getDemoPendingOrders = () => state.pendingOrders
 

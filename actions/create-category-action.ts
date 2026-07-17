@@ -2,16 +2,10 @@
 
 import { prisma } from "@/src/lib/prisma"
 import { CategorySchema } from "@/src/schema"
+import { slugify } from "@/src/lib/categories"
 import { revalidatePath } from "next/cache"
 import { isAdminAuthenticated } from "@/src/lib/admin-auth"
-
-const slugify = (value: string) =>
-    value
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+import type { CategoryLevel } from "@prisma/client"
 
 export const createCategory = async (data: unknown) => {
 
@@ -24,28 +18,51 @@ export const createCategory = async (data: unknown) => {
         return { errors: result.error.issues }
     }
 
-    const slug = slugify(result.data.name)
+    const { name, level, parentId, code } = result.data
+
+    // Construir slug incluyendo la ruta del padre para evitar colisiones entre ramas
+    let parent = null
+    if (parentId) {
+        parent = await prisma.category.findUnique({ where: { id: parentId } })
+        if (!parent) {
+            return { errors: [{ message: 'La categoria padre no existe.' }] }
+        }
+    }
+
+    const slugBase = parent ? `${parent.slug}-${name}` : name
+    const slug = slugify(slugBase)
     if (!slug) {
-        return { errors: [{ message: 'El nombre de la categoria no es valido.' }] }
+        return { errors: [{ message: 'El nombre no es valido.' }] }
     }
 
     try {
-        const existing = await prisma.category.findFirst({ where: { slug } })
+        const existing = await prisma.category.findUnique({ where: { slug } })
         if (existing) {
-            return { errors: [{ message: 'Ya existe una categoria con ese nombre.' }] }
+            return { errors: [{ message: 'Ya existe un elemento con ese nombre en ese nivel.' }] }
+        }
+
+        if (level === 'SUBCATEGORY' && code) {
+            const codeTaken = await prisma.category.findUnique({ where: { code } })
+            if (codeTaken) {
+                return { errors: [{ message: `El codigo "${code}" ya esta en uso.` }] }
+            }
         }
 
         await prisma.category.create({
             data: {
-                name: result.data.name,
+                name,
                 slug,
+                level: level as CategoryLevel,
+                parentId: parentId || null,
+                code: level === 'SUBCATEGORY' ? (code || null) : null,
             },
         })
     } catch {
-        return { errors: [{ message: 'No se pudo crear la categoria. Intenta de nuevo.' }] }
+        return { errors: [{ message: 'No se pudo crear. Intenta de nuevo.' }] }
     }
 
     revalidatePath('/admin/categories')
     revalidatePath('/admin/products')
+    revalidatePath('/')
     return { success: true }
 }

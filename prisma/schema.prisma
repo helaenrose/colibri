@@ -8,11 +8,25 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+enum CategoryLevel {
+  DEPARTMENT
+  CATEGORY
+  SUBCATEGORY
+}
+
 model Category {
-  id       String    @id @default(cuid())
+  id       String        @id @default(cuid())
   name     String
-  slug     String
+  slug     String        @unique
+  level    CategoryLevel @default(DEPARTMENT)
+  code     String?       @unique
+  parentId String?
+  parent   Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[]    @relation("CategoryHierarchy")
   Products Product[]
+
+  @@index([parentId])
+  @@index([level])
 }
 
 model Product {

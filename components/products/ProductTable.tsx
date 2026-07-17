@@ -1,4 +1,4 @@
-import { ProductsWithCategory } from '@/app/admin/products/page'
+import { ProductsWithCategory } from '@/app/admin/(protected)/products/page'
 import EmptyState from '@/components/ui/EmptyState'
 import { formatCurrency } from '@/src/utils'
 import { getStockStatus } from '@/src/lib/inventory'

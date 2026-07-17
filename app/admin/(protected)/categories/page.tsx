@@ -1,9 +1,22 @@
 import Heading from "@/components/ui/Heading"
 import CategoryManager from "@/components/categories/CategoryManager"
+import CategoryCsvImport from "@/components/categories/CategoryCsvImport"
 import { prisma } from "@/src/lib/prisma"
 import { getDemoCategories } from "@/src/demo/demo-store"
 
-const getCategories = async () => {
+export const dynamic = 'force-dynamic'
+
+export type AdminCategoryItem = {
+    id: string
+    name: string
+    slug: string
+    level: 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
+    code: string | null
+    parentId: string | null
+    productCount: number
+}
+
+const getCategories = async (): Promise<AdminCategoryItem[]> => {
     try {
         const categories = await prisma.category.findMany({
             orderBy: { name: 'asc' },
@@ -15,6 +28,9 @@ const getCategories = async () => {
             id: category.id,
             name: category.name,
             slug: category.slug,
+            level: category.level,
+            code: category.code,
+            parentId: category.parentId,
             productCount: category._count.Products,
         }))
     } catch {
@@ -22,6 +38,9 @@ const getCategories = async () => {
             id: category.id,
             name: category.name,
             slug: category.slug,
+            level: category.level,
+            code: category.code ?? null,
+            parentId: category.parentId ?? null,
             productCount: 0,
         }))
     }
@@ -29,6 +48,8 @@ const getCategories = async () => {
 
 const CategoriesPage = async () => {
     const categories = await getCategories()
+    const departmentCount = categories.filter((c) => c.level === 'DEPARTMENT').length
+    const subcategoryCount = categories.filter((c) => c.level === 'SUBCATEGORY').length
 
     return (
         <div className="space-y-6">
@@ -38,16 +59,22 @@ const CategoriesPage = async () => {
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Administracion</p>
                         <Heading>Gestionar categorias</Heading>
                         <p className="-mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
-                            Crea y organiza las categorias que agrupan los productos de tu tienda.
+                            Organiza tu catalogo en tres niveles: Departamento, Categoria y Subcategoria (con codigo).
                         </p>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 self-start rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">
-                        <span>{categories.length}</span>
-                        <span>{categories.length === 1 ? 'categoria' : 'categorias'}</span>
+                    <div className="flex flex-wrap items-center gap-2 self-start">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">
+                            {departmentCount} {departmentCount === 1 ? 'departamento' : 'departamentos'}
+                        </span>
+                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
+                            {subcategoryCount} {subcategoryCount === 1 ? 'subcategoria' : 'subcategorias'}
+                        </span>
                     </div>
                 </div>
             </section>
+
+            <CategoryCsvImport />
 
             <CategoryManager categories={categories} />
         </div>

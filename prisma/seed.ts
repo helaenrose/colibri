@@ -24,14 +24,22 @@ async function main() {
         });
     }
 
-    // Crear categorías y mapear el id original (del archivo de datos) al id generado
+    // Crear categorías respetando la jerarquía (padres antes que hijos)
+    // y mapear el id original (del archivo de datos) al id generado.
     const categoryIdMap: Record<string, string> = {};
+    const levelOrder = { DEPARTMENT: 0, CATEGORY: 1, SUBCATEGORY: 2 } as const;
+    const orderedCategories = [...categories].sort(
+        (a, b) => levelOrder[a.level] - levelOrder[b.level]
+    );
 
-    for (const category of categories) {
+    for (const category of orderedCategories) {
         const created = await prisma.category.create({
             data: {
                 name: category.name,
                 slug: category.slug,
+                level: category.level,
+                code: category.code ?? null,
+                parentId: category.parentId ? categoryIdMap[category.parentId] : null,
             },
         });
         categoryIdMap[category.id] = created.id;
