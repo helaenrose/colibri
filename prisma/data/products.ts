@@ -1,62 +1,68 @@
+// categoryId puede apuntar a cualquier nivel (departamento, categoria o subcategoria)
 export const products = [
   {
-    name: "Café Caramel con Chocolate",
-    price: 59.9,
-    image: "cafe_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Arroz Blanco 1 kg",
+    price: 1.5,
+    image: "arroz",
+    stock: 25,
+    categoryId: "sub-arroz-blanco"
   },
   {
-    name: "Café Frio con Chocolate Grande",
-    price: 49.9,
-    image: "cafe_02",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Arroz Integral 1 kg",
+    price: 1.8,
+    image: "arroz",
+    stock: 12,
+    categoryId: "sub-arroz-integral"
   },
   {
-    name: "Latte Frio con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_03",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Aceite Vegetal 1 L",
+    price: 2.8,
+    image: "aceite",
+    stock: 15,
+    categoryId: "sub-aceite-vegetal"
   },
   {
-    name: "Latte Frio con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_04",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Agua Mineral 1.5 L",
+    price: 0.9,
+    image: "agua",
+    stock: 30,
+    categoryId: "sub-agua-mineral"
   },
   {
-    name: "Malteada Fria con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_05",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Refresco de Cola 2 L",
+    price: 2.2,
+    image: "refresco_cola",
+    stock: 20,
+    categoryId: "sub-refresco-cola"
   },
   {
-    name: "Paquete de 3 donas de Chocolate",
-    price: 39.9,
-    image: "donas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b48" // Donas
+    name: "Detergente en Polvo 1 kg",
+    price: 3.5,
+    image: "detergente",
+    stock: 4,
+    categoryId: "sub-detergente"
   },
   {
-    name: "Hamburguesa Sencilla",
-    price: 59.9,
-    image: "hamburguesas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b46" // Hamburguesas
+    name: "Jabon de Barra",
+    price: 0.75,
+    image: "jabon",
+    stock: 40,
+    categoryId: "sub-jabon"
   },
   {
-    name: "Pizza Spicy con Doble Queso",
-    price: 69.9,
-    image: "pizzas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b47" // Pizzas
+    // producto asignado directamente a una CATEGORIA (nivel intermedio)
+    name: "Pack Refrescos Surtidos",
+    price: 6.5,
+    image: "refresco_cola",
+    stock: 8,
+    categoryId: "cat-refrescos"
   },
   {
-    name: "4 Rebanadas de Pay de Queso",
-    price: 69.9,
-    image: "pastel_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b49" // Pasteles
-  },
-  {
-    name: "Paquete Galletas de Chocolate",
-    price: 29.9,
-    image: "galletas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b4a" // Galletas
+    // producto asignado directamente a un DEPARTAMENTO (nivel superior)
+    name: "Canasta Basica Limpieza",
+    price: 9.9,
+    image: "detergente",
+    stock: 5,
+    categoryId: "dep-limpieza"
   }
 ];

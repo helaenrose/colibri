@@ -4,16 +4,13 @@ import { prisma } from "@/src/lib/prisma"
 import { ProductSchema } from "@/src/schema"
 import { revalidatePath } from "next/cache"
 import { updateDemoProduct } from "@/src/demo/demo-store"
-import { cookies } from "next/headers"
-import { ADMIN_SESSION_COOKIE_NAME, canAdminManageProducts } from "@/src/lib/admin-auth"
+import { isAdminAuthenticated } from "@/src/lib/admin-auth"
 
 export const updateProduct = async (data: unknown, id: string) => {
 
-    const cookieStore = await cookies()
-    const sessionToken = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value
-    if (!canAdminManageProducts(sessionToken)) {
+    if (!(await isAdminAuthenticated())) {
         return {
-            errors: [{ message: 'Modo solo lectura: no puedes editar productos.' }]
+            errors: [{ message: 'No autorizado: inicia sesion como administrador.' }]
         }
     }
 

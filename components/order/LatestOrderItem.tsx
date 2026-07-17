@@ -1,5 +1,9 @@
+'use client'
+
 import { OrderWithProducts } from '@/src/types'
 import React from 'react'
+import OrderInfo from './OrderInfo'
+import DeleteOrderButton from './DeleteOrderButton'
 
 interface LatestOrderItemProps {
     order: OrderWithProducts
@@ -35,6 +39,10 @@ const LatestOrderItem = ({ order, index }: LatestOrderItemProps) => {
                     </li>
                 ))}
             </ul>
+
+            <OrderInfo order={order} />
+
+            <DeleteOrderButton orderId={order.id} mutateKey="/admin/completed/api" />
         </article>
     )
 }

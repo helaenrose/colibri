@@ -1,14 +1,14 @@
 import Link from "next/link"
+import { getBusinessProfile } from "@/src/lib/business-profile"
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/order/cafe", label: "Pedir" },
-  { href: "/orders", label: "Retiro" },
-  { href: "/admin/products", label: "Admin productos" },
-  { href: "/admin/orders", label: "Admin ordenes" },
+  { href: "/order/abarrotes", label: "Comprar" },
+  { href: "/admin/orders", label: "Admin" },
 ]
 
-const TopNavbar = () => {
+const TopNavbar = async () => {
+  const profile = await getBusinessProfile()
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <nav
@@ -16,7 +16,7 @@ const TopNavbar = () => {
         className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8"
       >
         <Link href="/" className="shrink-0 text-sm font-black uppercase tracking-[0.16em] text-slate-900">
-          FastFood
+          {profile.name}
         </Link>
 
         <div className="ml-auto flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1 text-sm font-semibold text-slate-700 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -1,73 +1,68 @@
-export const ADMIN_SESSION_COOKIE_NAME = 'admin_session'
-export const ADMIN_ROLE_HEADER_NAME = 'x-admin-role'
+import "server-only"
 
-type Credentials = {
-  user: string
-  password: string
+import { createHmac, timingSafeEqual } from "crypto"
+import { cookies, headers } from "next/headers"
+import { auth } from "@/src/lib/auth"
+
+/**
+ * Nombre de la cookie usada por el acceso de emergencia (no pasa por Better Auth).
+ */
+export const EMERGENCY_COOKIE_NAME = "admin_emergency"
+
+/**
+ * Devuelve la sesión de Better Auth para el administrador autenticado,
+ * o null si no hay sesión válida. Existe un único rol: administrador.
+ */
+export const getAdminSession = async () => {
+    const session = await auth.api.getSession({ headers: await headers() })
+    return session
 }
 
-export type AdminRole = 'full' | 'readonly' | null
-
-const ADMIN_ROLES: Exclude<AdminRole, null>[] = ['full', 'readonly']
-const DEMO_ADMIN_CREDENTIALS: Credentials = {
-  user: 'demo',
-  password: 'demo123',
+/**
+ * Compara de forma segura dos strings (evita ataques de temporización).
+ */
+const safeEqual = (a: string, b: string) => {
+    const bufA = Buffer.from(a)
+    const bufB = Buffer.from(b)
+    if (bufA.length !== bufB.length) return false
+    return timingSafeEqual(bufA, bufB)
 }
 
-const toToken = (credentials: Credentials) =>
-  Buffer.from(`${credentials.user}:${credentials.password}`).toString('base64')
-
-export const getFullAdminCredentials = (): Credentials | null => {
-  const user = process.env.ADMIN_BASIC_USER?.trim()
-  const password = process.env.ADMIN_BASIC_PASSWORD
-
-  if (!user || !password) return null
-  return { user, password }
+/**
+ * Token firmado que representa una sesión de emergencia. Solo puede generarlo
+ * quien conoce BETTER_AUTH_SECRET, y la cookie se marca httpOnly.
+ */
+export const getEmergencyToken = () => {
+    const secret = process.env.BETTER_AUTH_SECRET ?? ""
+    return createHmac("sha256", secret).update("admin-emergency-v1").digest("hex")
 }
 
-export const getDemoAdminCredentials = (): Credentials => {
-  return DEMO_ADMIN_CREDENTIALS
+/**
+ * Valida las credenciales de emergencia contra ADMIN_BASIC_USER / ADMIN_BASIC_PASSWORD.
+ */
+export const checkEmergencyCredentials = (user: string, password: string) => {
+    const expectedUser = process.env.ADMIN_BASIC_USER
+    const expectedPassword = process.env.ADMIN_BASIC_PASSWORD
+    if (!expectedUser || !expectedPassword) return false
+    return safeEqual(user, expectedUser) && safeEqual(password, expectedPassword)
 }
 
-export const getFullAdminToken = (): string | null => {
-  const credentials = getFullAdminCredentials()
-  return credentials ? toToken(credentials) : null
+/**
+ * Indica si la cookie de emergencia presente es válida.
+ */
+export const hasValidEmergencyCookie = async () => {
+    const cookieStore = await cookies()
+    const token = cookieStore.get(EMERGENCY_COOKIE_NAME)?.value
+    if (!token) return false
+    return safeEqual(token, getEmergencyToken())
 }
 
-export const getDemoAdminToken = (): string | null => {
-  const credentials = getDemoAdminCredentials()
-  return credentials ? toToken(credentials) : null
+/**
+ * Indica si la petición actual pertenece a un administrador autenticado,
+ * ya sea por Better Auth o por el acceso de emergencia.
+ */
+export const isAdminAuthenticated = async () => {
+    const session = await getAdminSession()
+    if (session?.user) return true
+    return hasValidEmergencyCookie()
 }
-
-export const getAdminRoleFromSession = (token: string | undefined): AdminRole => {
-  if (!token) return null
-
-  const fullToken = getFullAdminToken()
-  if (fullToken && token === fullToken) return 'full'
-
-  const demoToken = getDemoAdminToken()
-  if (demoToken && token === demoToken) return 'readonly'
-
-  return null
-}
-
-export const isAdminRole = (value: string | null | undefined): value is Exclude<AdminRole, null> =>
-  Boolean(value) && ADMIN_ROLES.includes(value as Exclude<AdminRole, null>)
-
-export const resolveAdminRole = (
-  token: string | undefined,
-  roleHint: string | null | undefined,
-): AdminRole => {
-  if (isAdminRole(roleHint)) return roleHint
-  return getAdminRoleFromSession(token)
-}
-
-export const canAdminManageProducts = (
-  token: string | undefined,
-  roleHint?: string | null,
-) => resolveAdminRole(token, roleHint) === 'full'
-
-export const canAdminCompleteOrders = (
-  token: string | undefined,
-  roleHint: string | null | undefined,
-) => isAdminRole(resolveAdminRole(token, roleHint))

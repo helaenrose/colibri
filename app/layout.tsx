@@ -2,37 +2,29 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import TopNavbar from "@/components/ui/TopNavbar";
+import { getBusinessProfile } from "@/src/lib/business-profile";
 
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "FastFood | Restaurante Digital",
-    template: "%s | FastFood",
-  },
-  description:
-    "Proyecto full stack con Next.js, Prisma, MongoDB y una demo navegable pensada para portfolio técnico y entrevistas.",
-  keywords: [
-    "Next.js",
-    "React",
-    "TypeScript",
-    "Prisma",
-    "MongoDB",
-    "portfolio",
-    "full stack",
-    "restaurante digital",
-  ],
-  openGraph: {
-    title: "FastFood | Restaurante Digital",
-    description:
-      "Restaurante digital con panel admin, server actions, validación tipada y modo demo tolerante a fallos para reviews técnicas.",
-    type: "website",
-    locale: "es_AR",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const profile = await getBusinessProfile();
+  return {
+    title: {
+      default: `${profile.name} | Tienda en linea`,
+      template: `%s | ${profile.name}`,
+    },
+    description: `Compra en linea en ${profile.name}. Abarrotes, bebidas y productos de limpieza con pedido rapido.`,
+    openGraph: {
+      title: `${profile.name} | Tienda en linea`,
+      description: `Catalogo en linea de ${profile.name} con pedido rapido y retiro en tienda.`,
+      type: "website",
+      locale: "es_MX",
+    },
+  };
+}
 
 export default function RootLayout({
   children,

@@ -8,6 +8,7 @@ type DemoProduct = {
   name: string
   price: number
   image: string
+  stock: number
   categoryId: string
   category: DemoCategory
 }
@@ -27,12 +28,20 @@ type DemoOrderProduct = {
 type DemoOrder = {
   id: string
   name: string
+  phone: string
+  email: string | null
+  address: string | null
+  deliveryType: 'PICKUP' | 'DELIVERY'
+  receiptUrl: string
+  receiptId: string
   total: number
   date: Date
   status: boolean
   orderReadyAt: Date | null
   orderProducts: DemoOrderProduct[]
 }
+
+const DEMO_RECEIPT = 'https://res.cloudinary.com/demo/image/upload/sample.jpg'
 
 type DemoState = {
   categories: typeof seedCategories
@@ -48,6 +57,7 @@ const initialDemoProducts: DemoProduct[] = seedProducts.map((product, index) => 
   name: product.name,
   price: product.price,
   image: product.image,
+  stock: product.stock ?? 0,
   categoryId: product.categoryId,
   category: categoryById.get(product.categoryId)!,
 }))
@@ -56,7 +66,13 @@ const initialPendingOrders: DemoOrder[] = [
   {
     id: 'demo-order-pending-1',
     name: 'Cliente Demo',
-    total: 109.8,
+    phone: '+52 55 1234 5678',
+    email: 'cliente@demo.com',
+    address: 'Av. Siempre Viva 742',
+    deliveryType: 'DELIVERY',
+    receiptUrl: DEMO_RECEIPT,
+    receiptId: 'demo/comprobantes/sample',
+    total: 5.9,
     date: new Date('2026-05-20T12:00:00.000Z'),
     status: false,
     orderReadyAt: null,
@@ -65,11 +81,22 @@ const initialPendingOrders: DemoOrder[] = [
         id: 'demo-order-product-1',
         quantity: 2,
         product: {
-          id: '64538f1a2f9b1d8e6f4c8b45-0',
-          name: 'Café Caramel con Chocolate',
-          price: 59.9,
-          image: 'cafe_01',
-          categoryId: '64538f1a2f9b1d8e6f4c8b45',
+          id: 'sub-arroz-blanco-0',
+          name: 'Arroz Blanco 1 kg',
+          price: 1.5,
+          image: 'arroz',
+          categoryId: 'sub-arroz-blanco',
+        },
+      },
+      {
+        id: 'demo-order-product-2',
+        quantity: 1,
+        product: {
+          id: 'sub-aceite-vegetal-2',
+          name: 'Aceite Vegetal 1 L',
+          price: 2.8,
+          image: 'aceite',
+          categoryId: 'sub-aceite-vegetal',
         },
       },
     ],
@@ -79,8 +106,14 @@ const initialPendingOrders: DemoOrder[] = [
 const initialReadyOrders: DemoOrder[] = [
   {
     id: 'demo-order-ready-1',
-    name: 'Laura Gómez',
-    total: 119.8,
+    name: 'Laura Gomez',
+    phone: '+52 55 8899 0011',
+    email: null,
+    address: null,
+    deliveryType: 'PICKUP',
+    receiptUrl: DEMO_RECEIPT,
+    receiptId: 'demo/comprobantes/sample',
+    total: 4.3,
     date: new Date('2026-05-20T11:15:00.000Z'),
     status: true,
     orderReadyAt: new Date('2026-05-20T11:28:00.000Z'),
@@ -89,22 +122,22 @@ const initialReadyOrders: DemoOrder[] = [
         id: 'demo-order-ready-product-1',
         quantity: 1,
         product: {
-          id: '64538f1a2f9b1d8e6f4c8b46-6',
-          name: 'Hamburguesa Sencilla',
-          price: 59.9,
-          image: 'hamburguesas_01',
-          categoryId: '64538f1a2f9b1d8e6f4c8b46',
+          id: 'sub-refresco-cola-4',
+          name: 'Refresco de Cola 2 L',
+          price: 2.2,
+          image: 'refresco_cola',
+          categoryId: 'sub-refresco-cola',
         },
       },
       {
         id: 'demo-order-ready-product-2',
         quantity: 1,
         product: {
-          id: '64538f1a2f9b1d8e6f4c8b48-5',
-          name: 'Paquete de 3 donas de Chocolate',
-          price: 39.9,
-          image: 'donas_01',
-          categoryId: '64538f1a2f9b1d8e6f4c8b48',
+          id: 'sub-jabon-6',
+          name: 'Jabon de Barra',
+          price: 0.75,
+          image: 'jabon',
+          categoryId: 'sub-jabon',
         },
       },
     ],
@@ -141,11 +174,36 @@ export const getDemoProductById = (id: string) => state.products.find((product) 
 export const getDemoProductsByCategory = (slug: string) =>
   state.products.filter((product) => product.category.slug === slug)
 
+export const getDemoDepartments = () =>
+  state.categories.filter((category) => category.level === 'DEPARTMENT')
+
+export const getDemoCategoryBySlug = (slug: string) =>
+  state.categories.find((category) => category.slug === slug)
+
+// Ids de un nodo + todos sus descendientes
+const demoDescendantIds = (rootId: string): string[] => {
+  const result: string[] = []
+  const walk = (id: string) => {
+    result.push(id)
+    state.categories.filter((c) => c.parentId === id).forEach((c) => walk(c.id))
+  }
+  walk(rootId)
+  return result
+}
+
+// Productos de una categoria y de todos sus descendientes (con stock disponible)
+export const getDemoProductsByCategoryTree = (slug: string) => {
+  const root = state.categories.find((c) => c.slug === slug)
+  if (!root) return []
+  const ids = new Set(demoDescendantIds(root.id))
+  return state.products.filter((product) => ids.has(product.categoryId) && product.stock > 0)
+}
+
 export const getDemoPendingOrders = () => state.pendingOrders
 
 export const getDemoReadyOrders = () => state.readyOrders
 
-export const createDemoProduct = (data: { name: string; price: number; categoryId: string; image: string }) => {
+export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string }) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
 
@@ -161,7 +219,7 @@ export const createDemoProduct = (data: { name: string; price: number; categoryI
 
 export const updateDemoProduct = (
   id: string,
-  data: { name: string; price: number; categoryId: string; image: string },
+  data: { name: string; price: number; stock: number; categoryId: string; image: string },
 ) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
@@ -178,12 +236,24 @@ export const updateDemoProduct = (
 
 export const createDemoOrder = (data: {
   name: string
+  phone: string
+  email?: string
+  address?: string
+  deliveryType: 'PICKUP' | 'DELIVERY'
+  receiptUrl: string
+  receiptId: string
   total: number
   order: { id: string; name: string; price: number; quantity: number; subTotal: number }[]
 }) => {
   const order = {
     id: createId('demo-order'),
     name: data.name,
+    phone: data.phone,
+    email: data.email || null,
+    address: data.deliveryType === 'DELIVERY' ? (data.address || null) : null,
+    deliveryType: data.deliveryType,
+    receiptUrl: data.receiptUrl,
+    receiptId: data.receiptId,
     total: data.total,
     date: new Date(),
     status: false,
@@ -195,7 +265,7 @@ export const createDemoOrder = (data: {
         id: item.id,
         name: item.name,
         price: item.price,
-        image: 'cafe_01',
+        image: 'arroz',
         categoryId: state.categories[0]?.id ?? '',
       },
     })),
@@ -209,6 +279,15 @@ export const completeDemoOrder = (orderId: string) => {
   const order = state.pendingOrders.find((item) => item.id === orderId)
   if (!order) return null
 
+  // El inventario se descuenta unicamente al aprobar la orden
+  order.orderProducts.forEach((item) => {
+    state.products = state.products.map((product) =>
+      product.id === item.product.id
+        ? { ...product, stock: Math.max(0, product.stock - item.quantity) }
+        : product,
+    )
+  })
+
   const completedOrder = {
     ...order,
     status: true,
@@ -218,4 +297,15 @@ export const completeDemoOrder = (orderId: string) => {
   state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
   state.readyOrders = [completedOrder, ...state.readyOrders]
   return completedOrder
+}
+
+export const deleteDemoOrder = (orderId: string) => {
+  const order =
+    state.pendingOrders.find((item) => item.id === orderId) ??
+    state.readyOrders.find((item) => item.id === orderId)
+  if (!order) return null
+
+  state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
+  state.readyOrders = state.readyOrders.filter((item) => item.id !== orderId)
+  return order
 }

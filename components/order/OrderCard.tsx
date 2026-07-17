@@ -1,6 +1,8 @@
 import { OrderWithProducts } from '@/src/types'
 import { formatCurrency } from '@/src/utils'
 import OrderCardButton from './OrderCardButton'
+import OrderInfo from './OrderInfo'
+import DeleteOrderButton from './DeleteOrderButton'
 import { mutate } from 'swr'
 import { notifyOrderUpdate } from '@/src/hooks/useOrderChannelSync'
 import { toast } from 'react-toastify'
@@ -49,7 +51,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
             )
 
             toast.success('Orden completada')
-            mutate('/orders/api')
+            mutate('/admin/completed/api')
         } catch {
             toast.error('No se pudo completar la orden')
         } finally {
@@ -90,6 +92,8 @@ const OrderCard = ({ order }: OrderCardProps) => {
                 </div>
             </dl>
 
+            <OrderInfo order={order} />
+
             <form
                 onSubmit={handleSubmit}
                 aria-label={`Completar orden de ${order.name}`}
@@ -101,6 +105,8 @@ const OrderCard = ({ order }: OrderCardProps) => {
                     name='order_id' />
                 <OrderCardButton pending={isSubmitting} />
             </form>
+
+            <DeleteOrderButton orderId={order.id} mutateKey="/admin/orders/api" />
         </section>
     )
 }

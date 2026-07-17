@@ -1,14 +1,19 @@
 import Logo from "../ui/Logo"
 import AdminRoute from "./AdminRoute"
+import LogoutButton from "./LogoutButton"
+import { getBusinessProfile } from "@/src/lib/business-profile"
 
 const adminNavigation = [
     { url: '/admin/orders', text: 'Ordenes pendientes', blank: false },
+    { url: '/admin/completed', text: 'Ordenes completadas', blank: false },
     { url: '/admin/products', text: 'Productos', blank: false },
-    { url: '/order/cafe', text: 'Ver catalogo', blank: true },
-    { url: '/orders', text: 'Ordenes completadas', blank: true },
+    { url: '/admin/categories', text: 'Categorias', blank: false },
+    { url: '/admin/profile', text: 'Mi perfil', blank: false },
+    { url: '/order/abarrotes', text: 'Ver catalogo', blank: true },
 ]
 
-export default function AdminSidebar() {
+export default async function AdminSidebar() {
+    const profile = await getBusinessProfile()
 
     return (
         <div className="flex h-full flex-col px-4 py-4 sm:px-5 sm:py-5">
@@ -16,7 +21,7 @@ export default function AdminSidebar() {
                 <Logo />
                 <div className="text-center">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Panel de control</p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Admin FastFood</h2>
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">{profile.name}</h2>
                     <p className="mt-2 text-sm text-slate-600">Gestiona productos y pedidos desde un solo lugar.</p>
                 </div>
             </div>
@@ -33,14 +38,9 @@ export default function AdminSidebar() {
                 </nav>
             </div>
 
-            <form action="/api/admin/logout" method="post" className="pt-3">
-                <button
-                    type="submit"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-                >
-                    Cerrar sesion
-                </button>
-            </form>
+            <div className="pt-3">
+                <LogoutButton />
+            </div>
         </div>
 
     )

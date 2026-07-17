@@ -3,12 +3,53 @@ import ImageUpload from "./ImageUpload"
 import { Product } from "@prisma/client"
 import { getDemoCategories } from "@/src/demo/demo-store"
 
-const getCategories = async () => {
+type FlatCategory = {
+    id: string
+    name: string
+    level: 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
+    code: string | null
+    parentId: string | null
+}
+
+const getCategories = async (): Promise<FlatCategory[]> => {
     try {
-        return await prisma.category.findMany()
+        const rows = await prisma.category.findMany()
+        return rows.map((c) => ({
+            id: c.id,
+            name: c.name,
+            level: c.level,
+            code: c.code,
+            parentId: c.parentId,
+        }))
     } catch {
-        return getDemoCategories()
+        return getDemoCategories().map((c) => ({
+            id: c.id,
+            name: c.name,
+            level: c.level,
+            code: c.code ?? null,
+            parentId: c.parentId ?? null,
+        }))
     }
+}
+
+// Ordena y aplana la jerarquia: Departamento -> Categoria -> Subcategoria
+const buildOrderedOptions = (categories: FlatCategory[]) => {
+    const childrenOf = (parentId: string | null) =>
+        categories
+            .filter((c) => c.parentId === parentId)
+            .sort((a, b) => a.name.localeCompare(b.name))
+
+    const options: { id: string; label: string }[] = []
+    const walk = (parentId: string | null, depth: number) => {
+        childrenOf(parentId).forEach((node) => {
+            const indent = '\u00A0\u00A0'.repeat(depth)
+            const codeSuffix = node.code ? ` (${node.code})` : ''
+            options.push({ id: node.id, label: `${indent}${node.name}${codeSuffix}` })
+            walk(node.id, depth + 1)
+        })
+    }
+    walk(null, 0)
+    return options
 }
 
 
@@ -19,6 +60,7 @@ interface ProductFormProps {
 const ProductForm = async ({ product }: ProductFormProps) => {
 
     const categories = await getCategories()
+    const options = buildOrderedOptions(categories)
 
     return (
         <>
@@ -60,6 +102,25 @@ const ProductForm = async ({ product }: ProductFormProps) => {
             <div className="space-y-2">
                 <label
                     className="text-slate-800"
+                    htmlFor="stock"
+                >Inventario (unidades disponibles):</label>
+                <input
+                    id="stock"
+                    type="number"
+                    step="1"
+                    min="0"
+                    name="stock"
+                    required
+                    className="block w-full p-3 bg-slate-100 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Cantidad en inventario"
+                    defaultValue={product?.stock ?? 0}
+                />
+                <p className="text-xs text-slate-500">El inventario se descuenta automaticamente cuando apruebas la orden.</p>
+            </div>
+
+            <div className="space-y-2">
+                <label
+                    className="text-slate-800"
                     htmlFor="categoryId"
                 >Categoría:</label>
                 <select
@@ -70,11 +131,12 @@ const ProductForm = async ({ product }: ProductFormProps) => {
                     defaultValue={product?.categoryId}
                 >
                     <option value="">-- Seleccione --</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
+                    {options.map((option) => (
+                        <option key={option.id} value={option.id}>{option.label}</option>
                     ))}
 
                 </select>
+                <p className="text-xs text-slate-500">Puedes asignar el producto a un Departamento, Categoria o Subcategoria.</p>
             </div>
             <ImageUpload
                 image={product?.image}

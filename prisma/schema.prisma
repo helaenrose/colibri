@@ -3,30 +3,57 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum CategoryLevel {
+  DEPARTMENT
+  CATEGORY
+  SUBCATEGORY
 }
 
 model Category {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  id       String        @id @default(cuid())
   name     String
-  slug     String
+  slug     String        @unique
+  level    CategoryLevel @default(DEPARTMENT)
+  code     String?       @unique
+  parentId String?
+  parent   Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[]    @relation("CategoryHierarchy")
   Products Product[]
+
+  @@index([parentId])
+  @@index([level])
 }
 
 model Product {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id            String          @id @default(cuid())
   name          String
   price         Float
   image         String
-  categoryId    String          @db.ObjectId
+  stock         Int             @default(0)
+  categoryId    String
   category      Category        @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
 }
 
+enum DeliveryType {
+  PICKUP
+  DELIVERY
+}
+
 model Order {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id            String          @id @default(cuid())
   name          String
+  phone         String
+  email         String?
+  address       String?
+  deliveryType  DeliveryType    @default(PICKUP)
+  receiptUrl    String
+  receiptId     String
   total         Float
   date          DateTime        @default(now())
   status        Boolean         @default(false)
@@ -35,10 +62,95 @@ model Order {
 }
 
 model OrderProducts {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  orderId   String  @db.ObjectId
-  order     Order   @relation(fields: [orderId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
-  productId String  @db.ObjectId
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade) // Siempre debe relacionarse con el mismo tipo de dato
+  productId String
   product   Product @relation(fields: [productId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
   quantity  Int
+}
+
+model BusinessProfile {
+  id              String   @id @default(cuid())
+  name            String
+  image           String?
+  phone           String?
+  email           String?
+  address         String?
+  googleReviewsUrl String?
+  updatedAt       DateTime @updatedAt @default(now())
+
+  @@map("business_profile")
+}
+
+model BankAccount {
+  id          String   @id @default(cuid())
+  bankName    String
+  ownerName   String
+  idNumber    String
+  accountType String
+  email       String?
+  createdAt   DateTime @default(now())
+
+  @@map("bank_account")
+}
+
+// ---------- Better Auth ----------
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
 }

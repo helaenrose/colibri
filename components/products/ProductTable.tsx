@@ -1,10 +1,23 @@
-import { ProductsWithCategory } from '@/app/admin/products/page'
+import { ProductsWithCategory } from '@/app/admin/(protected)/products/page'
 import EmptyState from '@/components/ui/EmptyState'
 import { formatCurrency } from '@/src/utils'
+import { getStockStatus } from '@/src/lib/inventory'
 import Link from 'next/link'
 
 interface ProductTableProps {
     products: ProductsWithCategory
+}
+
+const stockBadgeClass: Record<ReturnType<typeof getStockStatus>, string> = {
+    out: 'bg-red-100 text-red-700',
+    low: 'bg-amber-100 text-amber-800',
+    ok: 'bg-emerald-100 text-emerald-700',
+}
+
+const stockLabel = (stock: number, status: ReturnType<typeof getStockStatus>) => {
+    if (status === 'out') return 'Agotado'
+    if (status === 'low') return `Bajo: ${stock}`
+    return `${stock} disp.`
 }
 
 const ProductTable = ({ products }: ProductTableProps) => {
@@ -29,6 +42,9 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                     <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                                         Categoría
                                     </th>
+                                    <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                        Inventario
+                                    </th>
                                     <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
                                         <span className="sr-only">Acciones</span>
                                     </th>
@@ -49,6 +65,16 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 sm:text-sm">
                                                 {product.category.name}
                                             </span>
+                                        </td>
+                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">
+                                            {(() => {
+                                                const status = getStockStatus(product.stock)
+                                                return (
+                                                    <span className={`rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${stockBadgeClass[status]}`}>
+                                                        {stockLabel(product.stock, status)}
+                                                    </span>
+                                                )
+                                            })()}
                                         </td>
                                         <td className="relative whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500 sm:pr-0">
                                             <Link

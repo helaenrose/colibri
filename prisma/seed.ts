@@ -2,33 +2,70 @@ import { categories } from "./data/categories";
 import { products } from "./data/products";
 import { PrismaClient } from "@prisma/client";
 
-
 const prisma = new PrismaClient();
 
 async function main() {
-    try {
-        for (const category of categories) {
-            await prisma.category.create({ data: category });
+    // Limpiar datos existentes respetando las relaciones
+    await prisma.orderProducts.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+
+    // Crear el perfil del negocio por defecto si aun no existe
+    const existingProfile = await prisma.businessProfile.findFirst();
+    if (!existingProfile) {
+        await prisma.businessProfile.create({
+            data: {
+                name: "Mi Tienda de Abarrotes",
+                phone: "+52 000 000 0000",
+                email: "contacto@mitienda.com",
+                address: "Calle Principal 123, Centro",
+            },
+        });
+    }
+
+    // Crear categorías respetando la jerarquía (padres antes que hijos)
+    // y mapear el id original (del archivo de datos) al id generado.
+    const categoryIdMap: Record<string, string> = {};
+    const levelOrder = { DEPARTMENT: 0, CATEGORY: 1, SUBCATEGORY: 2 } as const;
+    const orderedCategories = [...categories].sort(
+        (a, b) => levelOrder[a.level] - levelOrder[b.level]
+    );
+
+    for (const category of orderedCategories) {
+        const created = await prisma.category.create({
+            data: {
+                name: category.name,
+                slug: category.slug,
+                level: category.level,
+                code: category.code ?? null,
+                parentId: category.parentId ? categoryIdMap[category.parentId] : null,
+            },
+        });
+        categoryIdMap[category.id] = created.id;
+    }
+
+    // Crear productos conectándolos a la categoría correspondiente
+    for (const product of products) {
+        const categoryId = categoryIdMap[product.categoryId];
+        if (!categoryId) {
+            console.warn(`Categoría no encontrada para el producto ${product.name}`);
+            continue;
         }
 
-        for (const product of products) {
-            await prisma.product.create({
-                data: {
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                    category: {
-                        connect: { id: product.categoryId.toString() },
-                    },
+        await prisma.product.create({
+            data: {
+                name: product.name,
+                price: product.price,
+                image: product.image,
+                stock: product.stock ?? 0,
+                category: {
+                    connect: { id: categoryId },
                 },
-            });
-        }
-    } catch (error) {
-        console.error(error);
-
+            },
+        });
     }
 }
-
 
 main()
     .then(async () => {
