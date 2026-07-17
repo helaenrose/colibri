@@ -4,6 +4,7 @@ import Link from "next/link"
 import { prisma } from "@/src/lib/prisma"
 import { categories as seedCategories } from "@/prisma/data/categories"
 import { getBusinessProfile, getBusinessLogo } from "@/src/lib/business-profile"
+import { getBankAccounts } from "@/src/lib/bank-accounts"
 import CategoryIcon from "@/components/ui/CategoryIcon"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +25,11 @@ const getCategories = async () => {
 }
 
 export default async function Home() {
-  const [profile, categories] = await Promise.all([getBusinessProfile(), getCategories()])
+  const [profile, categories, bankAccounts] = await Promise.all([
+    getBusinessProfile(),
+    getCategories(),
+    getBankAccounts(),
+  ])
   const logoSrc = getBusinessLogo(profile.image)
   const logoUnoptimized = logoSrc.startsWith("http") && !logoSrc.includes("res.cloudinary.com")
   const firstCategory = categories[0]?.slug ?? "abarrotes"
@@ -101,6 +106,49 @@ export default async function Home() {
             </div>
           </div>
         </div>
+
+        {/* Datos para pago */}
+        {bankAccounts.length > 0 ? (
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Datos para pago</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+              Realiza tu pago y sube el comprobante
+            </h2>
+            <p className="mt-2 max-w-2xl text-pretty text-sm text-slate-600">
+              Transfiere a cualquiera de estas cuentas y adjunta tu comprobante al confirmar el pedido.
+            </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {bankAccounts.map((account) => (
+                <article
+                  key={account.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                >
+                  <h3 className="text-lg font-black text-slate-900">{account.bankName}</h3>
+                  <dl className="mt-3 space-y-2 text-sm">
+                    <div className="flex flex-col">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Titular</dt>
+                      <dd className="font-medium text-slate-800">{account.ownerName}</dd>
+                    </div>
+                    <div className="flex flex-col">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Cedula</dt>
+                      <dd className="font-medium text-slate-800">{account.idNumber}</dd>
+                    </div>
+                    <div className="flex flex-col">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Tipo de cuenta</dt>
+                      <dd className="font-medium text-slate-800">{account.accountType}</dd>
+                    </div>
+                    {account.email ? (
+                      <div className="flex flex-col">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Correo</dt>
+                        <dd className="font-medium text-slate-800 break-all">{account.email}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* Contacto */}
         {contactItems.length > 0 ? (
