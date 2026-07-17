@@ -47,5 +47,6 @@ export const BusinessProfileSchema = z.object({
     phone: z.string().trim().optional().or(z.literal('')),
     email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal('')),
     address: z.string().trim().optional().or(z.literal('')),
-    image: z.string().trim().optional().or(z.literal(''))
+    image: z.string().trim().optional().or(z.literal('')),
+    googleReviewsUrl: z.string().trim().url({ message: 'La URL de resenas no es valida' }).optional().or(z.literal(''))
 })

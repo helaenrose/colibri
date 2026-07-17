@@ -78,6 +78,16 @@ export default async function Home() {
                   Llamar ahora
                 </a>
               ) : null}
+              {profile.googleReviewsUrl ? (
+                <a
+                  href={profile.googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-amber-300 bg-amber-50 px-6 py-3 text-sm font-semibold text-amber-800 transition hover:-translate-y-0.5 hover:border-amber-400"
+                >
+                  Danos tu resena en Google
+                </a>
+              ) : null}
             </div>
           </div>
 

@@ -25,6 +25,7 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
             phone: formData.get('phone'),
             email: formData.get('email'),
             address: formData.get('address'),
+            googleReviewsUrl: formData.get('googleReviewsUrl'),
             image,
         }
 
@@ -98,6 +99,22 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
                         placeholder="Calle Principal 123, Centro"
                         className="block w-full rounded-md border border-slate-200 bg-slate-100 p-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <label htmlFor="googleReviewsUrl" className="text-sm font-semibold text-slate-800">Enlace de resenas de Google</label>
+                    <input
+                        id="googleReviewsUrl"
+                        name="googleReviewsUrl"
+                        type="url"
+                        inputMode="url"
+                        defaultValue={profile.googleReviewsUrl ?? ''}
+                        placeholder="https://maps.app.goo.gl/..."
+                        className="block w-full rounded-md border border-slate-200 bg-slate-100 p-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <p className="text-xs text-slate-500">
+                        Pega el enlace para que tus clientes dejen resenas en Google.
+                    </p>
                 </div>
 
                 <button

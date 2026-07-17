@@ -45,13 +45,14 @@ model OrderProducts {
 }
 
 model BusinessProfile {
-  id        String   @id @default(cuid())
-  name      String
-  image     String?
-  phone     String?
-  email     String?
-  address   String?
-  updatedAt DateTime @updatedAt @default(now())
+  id              String   @id @default(cuid())
+  name            String
+  image           String?
+  phone           String?
+  email           String?
+  address         String?
+  googleReviewsUrl String?
+  updatedAt       DateTime @updatedAt @default(now())
 
   @@map("business_profile")
 }
