@@ -1,18 +1,22 @@
 import { prisma } from "@/src/lib/prisma";
-import CategoryIcon from "../ui/CategoryIcon";
 import Logo from "../ui/Logo";
+import CategoryTreeNav from "./CategoryTreeNav";
+import { buildCategoryTree, type CategoryNode } from "@/src/lib/category-utils";
 import { categories as seedCategories } from "@/prisma/data/categories";
+import type { Category } from "@prisma/client";
 
-const getCategories = async () => {
+const getTree = async (): Promise<CategoryNode[]> => {
     try {
-        return await prisma.category.findMany();
+        const categories = await prisma.category.findMany();
+        if (categories.length === 0) throw new Error("empty");
+        return buildCategoryTree(categories);
     } catch {
-        return seedCategories;
+        return buildCategoryTree(seedCategories as unknown as Category[]);
     }
 };
 
 const OrderSidebar = async () => {
-    const categories = await getCategories();
+    const tree = await getTree();
 
     return (
         <aside className="w-full max-w-full min-w-0 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur md:h-screen md:w-80 md:border-b-0 md:border-r md:overflow-y-auto">
@@ -27,14 +31,7 @@ const OrderSidebar = async () => {
                 <h3 className="w-full bg-slate-900 py-2.5 text-center text-sm font-bold uppercase tracking-[0.2em] text-white sm:text-base md:py-3 md:text-lg md:tracking-wide">
                     Menu
                 </h3>
-                <div className="flex w-full min-w-0 gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-1 md:gap-0 md:overflow-visible md:px-0 md:py-0">
-                    {categories.map((category) => (
-                        <CategoryIcon
-                            key={category.id}
-                            category={category}
-                        />
-                    ))}
-                </div>
+                <CategoryTreeNav tree={tree} />
             </nav>
         </aside>
     );

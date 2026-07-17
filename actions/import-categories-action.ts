@@ -111,7 +111,10 @@ export const importCategories = async (csvText: string): Promise<ImportResult> =
 
     for (const row of parsedRows) {
         const existing = existingByCode.get(row.code.toUpperCase())
-        if (existing && existing.slug !== slugify(row.subcategory)) {
+        // El slug de una subcategoria es "departamento-categoria-subcategoria".
+        // Si el codigo ya existe en OTRA subcategoria (slug distinto) es un conflicto real.
+        const rowSubSlug = slugify(`${row.department}-${row.category}-${row.subcategory}`)
+        if (existing && existing.slug !== rowSubSlug) {
             errors.push({
                 message: `El codigo "${row.code}" ya pertenece a la subcategoria "${existing.name}". No se puede reasignar.`,
             })

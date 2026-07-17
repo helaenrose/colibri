@@ -1,7 +1,7 @@
 'use client'
 
 import { importCategories } from '@/actions/import-categories-action'
-import { parseCsv } from '@/src/lib/categories'
+import { parseCsv } from '@/src/lib/category-utils'
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'

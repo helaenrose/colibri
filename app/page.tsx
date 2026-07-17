@@ -15,24 +15,28 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const getCategories = async () => {
+const getDepartments = async () => {
   try {
-    const categories = await prisma.category.findMany({ orderBy: { name: "asc" } })
-    return categories.length > 0 ? categories : seedCategories
+    const departments = await prisma.category.findMany({
+      where: { level: "DEPARTMENT" },
+      orderBy: { name: "asc" },
+    })
+    if (departments.length > 0) return departments
+    return seedCategories.filter((c) => c.level === "DEPARTMENT")
   } catch {
-    return seedCategories
+    return seedCategories.filter((c) => c.level === "DEPARTMENT")
   }
 }
 
 export default async function Home() {
-  const [profile, categories, bankAccounts] = await Promise.all([
+  const [profile, departments, bankAccounts] = await Promise.all([
     getBusinessProfile(),
-    getCategories(),
+    getDepartments(),
     getBankAccounts(),
   ])
   const logoSrc = getBusinessLogo(profile.image)
   const logoUnoptimized = logoSrc.startsWith("http") && !logoSrc.includes("res.cloudinary.com")
-  const firstCategory = categories[0]?.slug ?? "abarrotes"
+  const firstCategory = departments[0]?.slug ?? "abarrotes-secos"
 
   const contactItems = [
     profile.phone ? { label: "Telefono", value: profile.phone, href: `tel:${profile.phone.replace(/\s+/g, "")}` } : null,
@@ -98,10 +102,10 @@ export default async function Home() {
 
           {/* Categorías */}
           <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Nuestras categorias</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Nuestros departamentos</p>
             <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {categories.map((category) => (
-                <CategoryIcon key={category.id} category={category} />
+              {departments.map((department) => (
+                <CategoryIcon key={department.id} category={department} />
               ))}
             </div>
           </div>
