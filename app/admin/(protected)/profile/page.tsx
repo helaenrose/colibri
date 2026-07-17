@@ -1,11 +1,13 @@
 import Heading from "@/components/ui/Heading"
 import ProfileForm from "@/components/profile/ProfileForm"
+import BankAccountManager from "@/components/profile/BankAccountManager"
 import { getBusinessProfile } from "@/src/lib/business-profile"
+import { getBankAccounts } from "@/src/lib/bank-accounts"
 
 export const dynamic = 'force-dynamic'
 
 const ProfilePage = async () => {
-    const profile = await getBusinessProfile()
+    const [profile, bankAccounts] = await Promise.all([getBusinessProfile(), getBankAccounts()])
 
     return (
         <div className="space-y-6">
@@ -22,6 +24,16 @@ const ProfilePage = async () => {
             </section>
 
             <ProfileForm profile={profile} />
+
+            <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pagos</p>
+                <Heading>Cuentas bancarias</Heading>
+                <p className="-mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+                    Estas cuentas se muestran a tus clientes para que realicen el pago y suban su comprobante al ordenar.
+                </p>
+            </section>
+
+            <BankAccountManager accounts={bankAccounts} />
         </div>
     )
 }

@@ -25,9 +25,20 @@ model Product {
   OrderProducts OrderProducts[]
 }
 
+enum DeliveryType {
+  PICKUP
+  DELIVERY
+}
+
 model Order {
   id            String          @id @default(cuid())
   name          String
+  phone         String
+  email         String?
+  address       String?
+  deliveryType  DeliveryType    @default(PICKUP)
+  receiptUrl    String
+  receiptId     String
   total         Float
   date          DateTime        @default(now())
   status        Boolean         @default(false)
@@ -38,7 +49,7 @@ model Order {
 model OrderProducts {
   id        String  @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade) // Siempre debe relacionarse con el mismo tipo de dato
   productId String
   product   Product @relation(fields: [productId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
   quantity  Int
@@ -55,6 +66,18 @@ model BusinessProfile {
   updatedAt       DateTime @updatedAt @default(now())
 
   @@map("business_profile")
+}
+
+model BankAccount {
+  id          String   @id @default(cuid())
+  bankName    String
+  ownerName   String
+  idNumber    String
+  accountType String
+  email       String?
+  createdAt   DateTime @default(now())
+
+  @@map("bank_account")
 }
 
 // ---------- Better Auth ----------

@@ -27,12 +27,20 @@ type DemoOrderProduct = {
 type DemoOrder = {
   id: string
   name: string
+  phone: string
+  email: string | null
+  address: string | null
+  deliveryType: 'PICKUP' | 'DELIVERY'
+  receiptUrl: string
+  receiptId: string
   total: number
   date: Date
   status: boolean
   orderReadyAt: Date | null
   orderProducts: DemoOrderProduct[]
 }
+
+const DEMO_RECEIPT = 'https://res.cloudinary.com/demo/image/upload/sample.jpg'
 
 type DemoState = {
   categories: typeof seedCategories
@@ -56,6 +64,12 @@ const initialPendingOrders: DemoOrder[] = [
   {
     id: 'demo-order-pending-1',
     name: 'Cliente Demo',
+    phone: '+52 55 1234 5678',
+    email: 'cliente@demo.com',
+    address: 'Av. Siempre Viva 742',
+    deliveryType: 'DELIVERY',
+    receiptUrl: DEMO_RECEIPT,
+    receiptId: 'demo/comprobantes/sample',
     total: 5.9,
     date: new Date('2026-05-20T12:00:00.000Z'),
     status: false,
@@ -91,6 +105,12 @@ const initialReadyOrders: DemoOrder[] = [
   {
     id: 'demo-order-ready-1',
     name: 'Laura Gomez',
+    phone: '+52 55 8899 0011',
+    email: null,
+    address: null,
+    deliveryType: 'PICKUP',
+    receiptUrl: DEMO_RECEIPT,
+    receiptId: 'demo/comprobantes/sample',
     total: 4.3,
     date: new Date('2026-05-20T11:15:00.000Z'),
     status: true,
@@ -189,12 +209,24 @@ export const updateDemoProduct = (
 
 export const createDemoOrder = (data: {
   name: string
+  phone: string
+  email?: string
+  address?: string
+  deliveryType: 'PICKUP' | 'DELIVERY'
+  receiptUrl: string
+  receiptId: string
   total: number
   order: { id: string; name: string; price: number; quantity: number; subTotal: number }[]
 }) => {
   const order = {
     id: createId('demo-order'),
     name: data.name,
+    phone: data.phone,
+    email: data.email || null,
+    address: data.deliveryType === 'DELIVERY' ? (data.address || null) : null,
+    deliveryType: data.deliveryType,
+    receiptUrl: data.receiptUrl,
+    receiptId: data.receiptId,
     total: data.total,
     date: new Date(),
     status: false,
@@ -229,4 +261,15 @@ export const completeDemoOrder = (orderId: string) => {
   state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
   state.readyOrders = [completedOrder, ...state.readyOrders]
   return completedOrder
+}
+
+export const deleteDemoOrder = (orderId: string) => {
+  const order =
+    state.pendingOrders.find((item) => item.id === orderId) ??
+    state.readyOrders.find((item) => item.id === orderId)
+  if (!order) return null
+
+  state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
+  state.readyOrders = state.readyOrders.filter((item) => item.id !== orderId)
+  return order
 }

@@ -4,79 +4,14 @@ import { useStore } from "@/src/store/store"
 import ProductDetails from "./ProductDetails"
 import { useMemo, useState } from "react"
 import { formatCurrency } from "@/src/utils"
-import { toast } from "react-toastify"
-import { mutate } from "swr"
-import { notifyOrderUpdate } from "@/src/hooks/useOrderChannelSync"
+import OrderCheckoutForm from "./OrderCheckoutForm"
 
 const OrderSummary = () => {
 
     const order = useStore(state => state.order)
-    const cleanOrder = useStore(state => state.cleanOrder)
     const total = useMemo(() => order.reduce((total, item) => total + (item.quantity * item.price), 0), [order])
     const totalItems = useMemo(() => order.reduce((acc, item) => acc + item.quantity, 0), [order])
     const [isOpen, setIsOpen] = useState(false)
-
-
-    const createOrder = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        const formData = new FormData(event.currentTarget)
-        const name = String(formData.get('name') ?? '').trim()
-
-        if (name.length < 2) {
-            toast.error('Ingresa un nombre valido')
-            return
-        }
-
-        if (order.length === 0) {
-            toast.error('Agrega al menos un producto al pedido')
-            return
-        }
-
-        const data = {
-            name,
-            total,
-            order
-        }
-
-        let response: { success?: boolean; errors?: { message: string }[] }
-
-        try {
-            const request = await fetch('/order/api', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-
-            response = await request.json()
-            if (!request.ok) {
-                throw new Error('No se pudo crear el pedido')
-            }
-        } catch {
-            toast.error('No se pudo crear el pedido')
-            return
-        }
-
-        if (response?.errors) {
-            response.errors.forEach((issue) => {
-                toast.error(issue.message)
-            })
-            return
-        }
-
-        if (!response?.success) {
-            toast.error('No se pudo crear el pedido')
-            return
-        }
-
-        toast.success('Pedido realizado con éxito')
-        mutate('/admin/orders/api')
-        notifyOrderUpdate()
-
-        cleanOrder()
-        setIsOpen(false)
-    }
 
     return (
         <>
@@ -121,17 +56,15 @@ const OrderSummary = () => {
                                 No hay productos en tu pedido
                             </div>
                         ) : (
-                            <>
-                                <div className="mt-3 flex-1 overflow-y-auto pr-1">
-                                    <ul className="space-y-2 pb-3">
-                                        {order.map((item) => (
-                                            <ProductDetails
-                                                key={item.id}
-                                                item={item}
-                                            />
-                                        ))}
-                                    </ul>
-                                </div>
+                            <div className="mt-3 flex-1 overflow-y-auto pr-1">
+                                <ul className="space-y-2 pb-3">
+                                    {order.map((item) => (
+                                        <ProductDetails
+                                            key={item.id}
+                                            item={item}
+                                        />
+                                    ))}
+                                </ul>
 
                                 <div className="border-t border-gray-200 pt-3">
                                     <p className="flex items-center justify-between gap-3 text-base sm:text-lg">
@@ -139,25 +72,9 @@ const OrderSummary = () => {
                                         <span className="text-xl font-black text-slate-900">{formatCurrency(total)}</span>
                                     </p>
 
-                                    <form
-                                        onSubmit={createOrder}
-                                        className="mt-3 w-full space-y-2.5"
-                                        noValidate>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            placeholder="Tu Nombre"
-                                            aria-label="Nombre del cliente"
-                                            className="w-full rounded-md border border-gray-200 bg-white p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                                        />
-                                        <input
-                                            type="submit"
-                                            className="w-full cursor-pointer rounded-md bg-gray-800 py-2.5 text-center text-sm font-semibold uppercase text-white transition-all hover:bg-gray-950 active:scale-[0.99]"
-                                            value="Confirmar pedido"
-                                        />
-                                    </form>
+                                    <OrderCheckoutForm total={total} onSuccess={() => setIsOpen(false)} />
                                 </div>
-                            </>
+                            </div>
                         )}
                     </aside>
                 </>

@@ -18,6 +18,12 @@ export const POST = async (request: Request) => {
     await withTimeout(prisma.order.create({
       data: {
         name: result.data.name,
+        phone: result.data.phone,
+        email: result.data.email || null,
+        deliveryType: result.data.deliveryType,
+        address: result.data.deliveryType === "DELIVERY" ? (result.data.address || null) : null,
+        receiptUrl: result.data.receiptUrl,
+        receiptId: result.data.receiptId,
         total: result.data.total,
         orderProducts: {
           create: result.data.order.map((product) => ({
