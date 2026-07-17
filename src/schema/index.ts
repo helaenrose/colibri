@@ -33,3 +33,19 @@ export const ProductSchema = z.object({
         .min(1, { message: 'La categoría es obligatoria' }),
     image: z.string().min(1, "La imagen es obligatoria")
 })
+
+export const CategorySchema = z.object({
+    name: z.string()
+        .trim()
+        .min(2, { message: 'El nombre de la categoria debe tener al menos 2 caracteres' })
+})
+
+export const BusinessProfileSchema = z.object({
+    name: z.string()
+        .trim()
+        .min(2, { message: 'El nombre del negocio es obligatorio' }),
+    phone: z.string().trim().optional().or(z.literal('')),
+    email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal('')),
+    address: z.string().trim().optional().or(z.literal('')),
+    image: z.string().trim().optional().or(z.literal(''))
+})

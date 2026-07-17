@@ -1,62 +1,38 @@
 export const products = [
   {
-    name: "Café Caramel con Chocolate",
-    price: 59.9,
-    image: "cafe_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Arroz Blanco 1 kg",
+    price: 1.5,
+    image: "arroz",
+    categoryId: "cat-abarrotes"
   },
   {
-    name: "Café Frio con Chocolate Grande",
-    price: 49.9,
-    image: "cafe_02",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Aceite Vegetal 1 L",
+    price: 2.8,
+    image: "aceite",
+    categoryId: "cat-abarrotes"
   },
   {
-    name: "Latte Frio con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_03",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Agua Mineral 1.5 L",
+    price: 0.9,
+    image: "agua",
+    categoryId: "cat-bebidas"
   },
   {
-    name: "Latte Frio con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_04",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Refresco de Cola 2 L",
+    price: 2.2,
+    image: "refresco_cola",
+    categoryId: "cat-bebidas"
   },
   {
-    name: "Malteada Fria con Chocolate Grande",
-    price: 54.9,
-    image: "cafe_05",
-    categoryId: "64538f1a2f9b1d8e6f4c8b45" // Café
+    name: "Detergente en Polvo 1 kg",
+    price: 3.5,
+    image: "detergente",
+    categoryId: "cat-limpieza"
   },
   {
-    name: "Paquete de 3 donas de Chocolate",
-    price: 39.9,
-    image: "donas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b48" // Donas
-  },
-  {
-    name: "Hamburguesa Sencilla",
-    price: 59.9,
-    image: "hamburguesas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b46" // Hamburguesas
-  },
-  {
-    name: "Pizza Spicy con Doble Queso",
-    price: 69.9,
-    image: "pizzas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b47" // Pizzas
-  },
-  {
-    name: "4 Rebanadas de Pay de Queso",
-    price: 69.9,
-    image: "pastel_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b49" // Pasteles
-  },
-  {
-    name: "Paquete Galletas de Chocolate",
-    price: 29.9,
-    image: "galletas_01",
-    categoryId: "64538f1a2f9b1d8e6f4c8b4a" // Galletas
+    name: "Jabon de Barra",
+    price: 0.75,
+    image: "jabon",
+    categoryId: "cat-limpieza"
   }
 ];

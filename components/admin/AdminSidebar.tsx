@@ -4,9 +4,11 @@ import LogoutButton from "./LogoutButton"
 
 const adminNavigation = [
     { url: '/admin/orders', text: 'Ordenes pendientes', blank: false },
+    { url: '/admin/completed', text: 'Ordenes completadas', blank: false },
     { url: '/admin/products', text: 'Productos', blank: false },
-    { url: '/order/cafe', text: 'Ver catalogo', blank: true },
-    { url: '/orders', text: 'Ordenes completadas', blank: true },
+    { url: '/admin/categories', text: 'Categorias', blank: false },
+    { url: '/admin/profile', text: 'Mi perfil', blank: false },
+    { url: '/order/abarrotes', text: 'Ver catalogo', blank: true },
 ]
 
 export default function AdminSidebar() {

@@ -49,7 +49,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
             )
 
             toast.success('Orden completada')
-            mutate('/orders/api')
+            mutate('/admin/completed/api')
         } catch {
             toast.error('No se pudo completar la orden')
         } finally {

@@ -1,0 +1,29 @@
+import Heading from "@/components/ui/Heading"
+import ProfileForm from "@/components/profile/ProfileForm"
+import { getBusinessProfile } from "@/src/lib/business-profile"
+
+export const dynamic = 'force-dynamic'
+
+const ProfilePage = async () => {
+    const profile = await getBusinessProfile()
+
+    return (
+        <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Administracion</p>
+                        <Heading>Mi perfil</Heading>
+                        <p className="-mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+                            Actualiza el nombre, la imagen y la informacion de contacto de tu negocio. Estos datos se reflejan en el sitio publico.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <ProfileForm profile={profile} />
+        </div>
+    )
+}
+
+export default ProfilePage

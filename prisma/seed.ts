@@ -11,6 +11,19 @@ async function main() {
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
 
+    // Crear el perfil del negocio por defecto si aun no existe
+    const existingProfile = await prisma.businessProfile.findFirst();
+    if (!existingProfile) {
+        await prisma.businessProfile.create({
+            data: {
+                name: "Mi Tienda de Abarrotes",
+                phone: "+52 000 000 0000",
+                email: "contacto@mitienda.com",
+                address: "Calle Principal 123, Centro",
+            },
+        });
+    }
+
     // Crear categorías y mapear el id original (del archivo de datos) al id generado
     const categoryIdMap: Record<string, string> = {};
 

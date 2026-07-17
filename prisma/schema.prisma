@@ -44,6 +44,18 @@ model OrderProducts {
   quantity  Int
 }
 
+model BusinessProfile {
+  id        String   @id @default(cuid())
+  name      String
+  image     String?
+  phone     String?
+  email     String?
+  address   String?
+  updatedAt DateTime @updatedAt @default(now())
+
+  @@map("business_profile")
+}
+
 // ---------- Better Auth ----------
 
 model User {

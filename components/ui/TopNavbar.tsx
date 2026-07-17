@@ -2,10 +2,8 @@ import Link from "next/link"
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/order/cafe", label: "Pedir" },
-  { href: "/orders", label: "Retiro" },
-  { href: "/admin/products", label: "Admin productos" },
-  { href: "/admin/orders", label: "Admin ordenes" },
+  { href: "/order/abarrotes", label: "Comprar" },
+  { href: "/admin/orders", label: "Admin" },
 ]
 
 const TopNavbar = () => {
