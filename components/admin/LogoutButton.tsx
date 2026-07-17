@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/src/lib/auth-client"
+import { clearEmergencySession } from "@/actions/admin-session-actions"
 
 export default function LogoutButton() {
     const router = useRouter()
@@ -10,7 +11,13 @@ export default function LogoutButton() {
 
     const handleLogout = async () => {
         setLoading(true)
-        await authClient.signOut()
+        // Cierra la sesión de Better Auth (si existe) y limpia el acceso de emergencia.
+        try {
+            await authClient.signOut()
+        } catch {
+            // Sin sesión de Better Auth (acceso de emergencia): ignorar.
+        }
+        await clearEmergencySession()
         router.push("/admin/login")
         router.refresh()
     }

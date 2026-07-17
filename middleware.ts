@@ -11,9 +11,10 @@ export const middleware = (request: NextRequest) => {
   }
 
   // Chequeo optimista de la cookie de sesión (compatible con edge).
-  // La validación real contra la base de datos ocurre en el layout y en las acciones.
+  // La validación real (Better Auth o acceso de emergencia) ocurre en el layout y en las acciones.
   const sessionCookie = getSessionCookie(request)
-  const isAuthenticated = Boolean(sessionCookie)
+  const emergencyCookie = request.cookies.get('admin_emergency')?.value
+  const isAuthenticated = Boolean(sessionCookie) || Boolean(emergencyCookie)
 
   if (request.nextUrl.pathname.startsWith(ADMIN_LOGIN_PATH)) {
     if (isAuthenticated) {

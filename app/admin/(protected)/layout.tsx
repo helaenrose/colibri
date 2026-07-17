@@ -1,16 +1,16 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Notification from "@/components/ui/Notification";
 import { redirect } from "next/navigation";
-import { getAdminSession } from "@/src/lib/admin-auth";
+import { isAdminAuthenticated } from "@/src/lib/admin-auth";
 
 export default async function AdminLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const session = await getAdminSession()
+    const authenticated = await isAdminAuthenticated()
 
-    if (!session?.user) {
+    if (!authenticated) {
         redirect('/admin/login')
     }
 
