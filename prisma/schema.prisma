@@ -3,29 +3,30 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Category {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  id       String    @id @default(cuid())
   name     String
   slug     String
   Products Product[]
 }
 
 model Product {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id            String          @id @default(cuid())
   name          String
   price         Float
   image         String
-  categoryId    String          @db.ObjectId
+  categoryId    String
   category      Category        @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
 }
 
 model Order {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id            String          @id @default(cuid())
   name          String
   total         Float
   date          DateTime        @default(now())
@@ -35,10 +36,10 @@ model Order {
 }
 
 model OrderProducts {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  orderId   String  @db.ObjectId
+  id        String  @id @default(cuid())
+  orderId   String
   order     Order   @relation(fields: [orderId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
-  productId String  @db.ObjectId
+  productId String
   product   Product @relation(fields: [productId], references: [id]) // Siempre debe relacionarse con el mismo tipo de dato
   quantity  Int
 }

@@ -2,33 +2,48 @@ import { categories } from "./data/categories";
 import { products } from "./data/products";
 import { PrismaClient } from "@prisma/client";
 
-
 const prisma = new PrismaClient();
 
 async function main() {
-    try {
-        for (const category of categories) {
-            await prisma.category.create({ data: category });
+    // Limpiar datos existentes respetando las relaciones
+    await prisma.orderProducts.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+
+    // Crear categorías y mapear el id original (del archivo de datos) al id generado
+    const categoryIdMap: Record<string, string> = {};
+
+    for (const category of categories) {
+        const created = await prisma.category.create({
+            data: {
+                name: category.name,
+                slug: category.slug,
+            },
+        });
+        categoryIdMap[category.id] = created.id;
+    }
+
+    // Crear productos conectándolos a la categoría correspondiente
+    for (const product of products) {
+        const categoryId = categoryIdMap[product.categoryId];
+        if (!categoryId) {
+            console.warn(`Categoría no encontrada para el producto ${product.name}`);
+            continue;
         }
 
-        for (const product of products) {
-            await prisma.product.create({
-                data: {
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                    category: {
-                        connect: { id: product.categoryId.toString() },
-                    },
+        await prisma.product.create({
+            data: {
+                name: product.name,
+                price: product.price,
+                image: product.image,
+                category: {
+                    connect: { id: categoryId },
                 },
-            });
-        }
-    } catch (error) {
-        console.error(error);
-
+            },
+        });
     }
 }
-
 
 main()
     .then(async () => {
