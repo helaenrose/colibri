@@ -8,6 +8,7 @@ type DemoProduct = {
   name: string
   price: number
   image: string
+  stock: number
   categoryId: string
   category: DemoCategory
 }
@@ -56,6 +57,7 @@ const initialDemoProducts: DemoProduct[] = seedProducts.map((product, index) => 
   name: product.name,
   price: product.price,
   image: product.image,
+  stock: product.stock ?? 0,
   categoryId: product.categoryId,
   category: categoryById.get(product.categoryId)!,
 }))
@@ -176,7 +178,7 @@ export const getDemoPendingOrders = () => state.pendingOrders
 
 export const getDemoReadyOrders = () => state.readyOrders
 
-export const createDemoProduct = (data: { name: string; price: number; categoryId: string; image: string }) => {
+export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string }) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
 
@@ -192,7 +194,7 @@ export const createDemoProduct = (data: { name: string; price: number; categoryI
 
 export const updateDemoProduct = (
   id: string,
-  data: { name: string; price: number; categoryId: string; image: string },
+  data: { name: string; price: number; stock: number; categoryId: string; image: string },
 ) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
@@ -251,6 +253,15 @@ export const createDemoOrder = (data: {
 export const completeDemoOrder = (orderId: string) => {
   const order = state.pendingOrders.find((item) => item.id === orderId)
   if (!order) return null
+
+  // El inventario se descuenta unicamente al aprobar la orden
+  order.orderProducts.forEach((item) => {
+    state.products = state.products.map((product) =>
+      product.id === item.product.id
+        ? { ...product, stock: Math.max(0, product.stock - item.quantity) }
+        : product,
+    )
+  })
 
   const completedOrder = {
     ...order,

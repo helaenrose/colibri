@@ -42,6 +42,9 @@ export const ProductSchema = z.object({
         .min(1, { message: 'El nombre del producto no puede ir vacio' }),
     price: z.coerce.number()
         .positive({ message: 'Precio no válido' }),
+    stock: z.coerce.number()
+        .int({ message: 'El inventario debe ser un numero entero' })
+        .min(0, { message: 'El inventario no puede ser negativo' }),
     categoryId: z.string()
         .trim()
         .min(1, { message: 'La categoría es obligatoria' }),

@@ -24,14 +24,33 @@ export const POST = async (request: NextRequest) => {
   }
 
   try {
-    await withTimeout(prisma.order.update({
-      where: {
-        id: result.data.orderId
-      },
-      data: {
-        status: true,
-        orderReadyAt: new Date(Date.now())
+    await withTimeout(prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: result.data.orderId },
+        include: { orderProducts: true },
+      })
+
+      if (!order) {
+        throw new Error('Orden no encontrada')
       }
+
+      // El inventario se descuenta unicamente al aprobar la orden (y solo una vez)
+      if (!order.status) {
+        for (const item of order.orderProducts) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          })
+        }
+      }
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: true,
+          orderReadyAt: new Date(Date.now()),
+        },
+      })
     }))
 
     return Response.json({ success: true })

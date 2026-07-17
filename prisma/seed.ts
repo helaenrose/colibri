@@ -50,6 +50,7 @@ async function main() {
                 name: product.name,
                 price: product.price,
                 image: product.image,
+                stock: product.stock ?? 0,
                 category: {
                     connect: { id: categoryId },
                 },

@@ -60,6 +60,25 @@ const ProductForm = async ({ product }: ProductFormProps) => {
             <div className="space-y-2">
                 <label
                     className="text-slate-800"
+                    htmlFor="stock"
+                >Inventario (unidades disponibles):</label>
+                <input
+                    id="stock"
+                    type="number"
+                    step="1"
+                    min="0"
+                    name="stock"
+                    required
+                    className="block w-full p-3 bg-slate-100 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Cantidad en inventario"
+                    defaultValue={product?.stock ?? 0}
+                />
+                <p className="text-xs text-slate-500">El inventario se descuenta automaticamente cuando apruebas la orden.</p>
+            </div>
+
+            <div className="space-y-2">
+                <label
+                    className="text-slate-800"
                     htmlFor="categoryId"
                 >Categoría:</label>
                 <select

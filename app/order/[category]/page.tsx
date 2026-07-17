@@ -7,7 +7,11 @@ const getCategoryWithProducts = async (category: string) => {
     try {
         const found = await prisma.category.findFirst({
             where: { slug: category },
-            include: { Products: true },
+            include: {
+                Products: {
+                    where: { stock: { gt: 0 } },
+                },
+            },
         })
         return {
             title: found?.name ?? "Productos",
@@ -17,7 +21,7 @@ const getCategoryWithProducts = async (category: string) => {
         const demoCategory = getDemoCategories().find((item) => item.slug === category)
         return {
             title: demoCategory?.name ?? "Productos",
-            products: getDemoProductsByCategory(category),
+            products: getDemoProductsByCategory(category).filter((product) => product.stock > 0),
         }
     }
 }

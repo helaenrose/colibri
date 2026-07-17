@@ -19,6 +19,7 @@ const AddProductForm = ({ children }: { children: React.ReactNode }) => {
         const data = {
             name: formData.get('name'),
             price: formData.get('price'),
+            stock: formData.get('stock'),
             categoryId: formData.get('categoryId'),
             image: formData.get('image')
         }

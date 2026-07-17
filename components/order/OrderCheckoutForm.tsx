@@ -251,6 +251,13 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
                 )}
             </div>
 
+            <div
+                role="alert"
+                className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800"
+            >
+                Solo se despachara despues de que el pago se haga efectivo, por favor tomar esto en cuenta sobre todo en transferencias interbancarias.
+            </div>
+
             <button
                 type="submit"
                 disabled={isSubmitting || isUploading}
