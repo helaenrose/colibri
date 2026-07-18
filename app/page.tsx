@@ -98,6 +98,39 @@ export default async function Home() {
                 </a>
               ) : null}
             </div>
+
+            {/* Contacto */}
+            {contactItems.length > 0 ? (
+              <div className="mt-4 w-full border-t border-slate-200 pt-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Contacto</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-4">
+                  {contactItems.map((item) => {
+                    const content = (
+                      <>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                        <p className="mt-2 text-sm font-semibold text-slate-900">{item.value}</p>
+                      </>
+                    )
+                    return item.href ? (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        className="min-w-[12rem] flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
+                      >
+                        {content}
+                      </a>
+                    ) : (
+                      <div
+                        key={item.label}
+                        className="min-w-[12rem] flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left"
+                      >
+                        {content}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -142,42 +175,6 @@ export default async function Home() {
               ))}
             </div>
           </section>
-        ) : null}
-
-        {/* Contacto */}
-        {contactItems.length > 0 ? (
-          <footer className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Contacto</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-              Visitanos o escribenos
-            </h2>
-            <div className="mt-6 flex flex-wrap gap-4">
-              {contactItems.map((item) => {
-                const content = (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{item.value}</p>
-                  </>
-                )
-                return item.href ? (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="min-w-[12rem] flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
-                  >
-                    {content}
-                  </a>
-                ) : (
-                  <div
-                    key={item.label}
-                    className="min-w-[12rem] flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    {content}
-                  </div>
-                )
-              })}
-            </div>
-          </footer>
         ) : null}
 
         {/* Departamentos */}
