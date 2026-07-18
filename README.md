@@ -2,6 +2,8 @@
 
 Aplicacion full stack para una tienda de abarrotes construida con Next.js.
 
+Produccion: https://tiendacolibri.vercel.app
+
 La app tiene dos caras:
 1. Cliente: navegar la jerarquia de categorias (Departamento -> Categoria -> Subcategoria), armar carrito y crear pedido.
 2. Admin: gestionar categorias y productos, y aprobar/completar ordenes (el inventario se descuenta al aprobar).
