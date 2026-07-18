@@ -5,7 +5,7 @@ import { getSessionCookie } from 'better-auth/cookies'
 const ADMIN_LOGIN_PATH = '/admin/login'
 const ADMIN_DEFAULT_PATH = '/admin/products'
 
-export const middleware = (request: NextRequest) => {
+export const proxy = (request: NextRequest) => {
   if (!request.nextUrl.pathname.startsWith('/admin')) {
     return NextResponse.next()
   }
