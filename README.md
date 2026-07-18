@@ -17,8 +17,9 @@ Tambien tiene modo demo (fallback) para mantener navegabilidad cuando la base ex
 
 ## Stack
 
-- Next.js 15 + React 19 + TypeScript
-- Prisma + MongoDB
+- Next.js 16 + React 19 + TypeScript
+- Prisma + PostgreSQL (Neon)
+- Better Auth (autenticacion)
 - Tailwind CSS
 - Zustand + SWR
 - Zod
@@ -64,10 +65,21 @@ npm install
 3. Crear `.env` (puedes copiar `.env.template`)
 
 ```bash
+# Base de datos PostgreSQL (Neon)
 DATABASE_URL=
+DATABASE_URL_UNPOOLED=
+
+# Autenticacion (genera un secreto con: openssl rand -base64 32)
+BETTER_AUTH_SECRET=
+# Opcional: URL base de auth (fallback a la URL de Vercel en produccion)
+BETTER_AUTH_URL=
+
+# Cloudinary (server + widget cliente)
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 NEXT_PUBLIC_CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
 
 # Opcional (default: 8000)
 DB_QUERY_TIMEOUT_MS=8000
@@ -101,19 +113,24 @@ http://localhost:3000
 ## Scripts
 
 - `npm run dev`: desarrollo
-- `npm run build`: build produccion
+- `npm run build`: `prisma generate` + build de produccion
 - `npm run start`: correr build
-- `npm run lint`: lint Next.js
+- `npm run lint`: lint con ESLint
 
 ## Variables de entorno importantes
 
-- `DATABASE_URL`: conexion MongoDB (obligatoria)
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: cloud name para widget
-- `NEXT_PUBLIC_CLOUDINARY_API_KEY`: api key publica para upload widget
-- `CLOUDINARY_API_SECRET`: secreto de Cloudinary
+- `DATABASE_URL`: conexion PostgreSQL/Neon con pooling (obligatoria)
+- `DATABASE_URL_UNPOOLED`: conexion directa sin pooling (obligatoria)
+- `BETTER_AUTH_SECRET`: secreto para firmar sesiones (obligatoria)
+- `BETTER_AUTH_URL`: URL base de auth (opcional, fallback a la URL de Vercel)
+- `CLOUDINARY_CLOUD_NAME`: cloud name (server)
+- `CLOUDINARY_API_KEY`: api key (server)
+- `CLOUDINARY_API_SECRET`: secreto de Cloudinary (server)
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: cloud name para el widget de subida
+- `NEXT_PUBLIC_CLOUDINARY_API_KEY`: api key publica para el widget de subida
 - `DB_QUERY_TIMEOUT_MS`: timeout de queries Prisma con fallback de 8000ms
 - `DEMO_FALLBACK_ENABLED`: habilita fallback demo (`true/false`)
-- `ADMIN_BASIC_USER` y `ADMIN_BASIC_PASSWORD`: usuario admin con acceso total (no se recomienda publicarlo)
+- `ADMIN_BASIC_USER` y `ADMIN_BASIC_PASSWORD`: bloqueo basico para rutas `/admin`
 
 
 ### Credenciales de demo para recruiters
@@ -131,9 +148,10 @@ Con este esquema:
 ## Nota de produccion (Vercel)
 
 Si en produccion ves errores 500 al crear/listar ordenes, revisa primero variables:
-1. `DATABASE_URL` cargada en entorno `Production`.
+1. `DATABASE_URL` y `DATABASE_URL_UNPOOLED` cargadas en entorno `Production`.
 2. Re-deploy despues de editar variables.
-3. Verificar conectividad de MongoDB (red/IP/usuario).
+3. Verificar conectividad de la base PostgreSQL/Neon (host, credenciales, SSL).
+4. Confirmar que `prisma generate` corre en el build (ya incluido en el script `build`).
 
 ## Estructura base
 
