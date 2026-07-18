@@ -22,6 +22,7 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
         const formData = new FormData(event.currentTarget)
         const data = {
             name: formData.get('name'),
+            tagline: formData.get('tagline'),
             phone: formData.get('phone'),
             email: formData.get('email'),
             address: formData.get('address'),
@@ -63,6 +64,21 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
                         placeholder="Nombre de tu tienda"
                         className="block w-full rounded-md border border-slate-200 bg-slate-100 p-3 focus:outline-none focus:ring-2 focus:ring-amber-400"
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <label htmlFor="tagline" className="text-sm font-semibold text-slate-800">Frase de bienvenida (home)</label>
+                    <textarea
+                        id="tagline"
+                        name="tagline"
+                        rows={3}
+                        defaultValue={profile.tagline ?? ''}
+                        placeholder="Tus productos de siempre, al alcance de un clic..."
+                        className="block w-full resize-y rounded-md border border-slate-200 bg-slate-100 p-3 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <p className="text-xs text-slate-500">
+                        Este texto aparece bajo el nombre del negocio en la pagina de inicio.
+                    </p>
                 </div>
 
                 <div className="space-y-2">

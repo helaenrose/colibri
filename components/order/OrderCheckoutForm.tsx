@@ -6,8 +6,7 @@ import { toast } from "react-toastify"
 import { mutate } from "swr"
 import { useStore } from "@/src/store/store"
 import { notifyOrderUpdate } from "@/src/hooks/useOrderChannelSync"
-
-type DeliveryType = "PICKUP" | "DELIVERY"
+import { compressImage } from "@/src/lib/compress-image"
 
 type OrderItem = {
     id: string
@@ -23,11 +22,10 @@ type Props = {
 
 const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const order = useStore((state) => state.order)
+    const customer = useStore((state) => state.customer)
+    const setCustomer = useStore((state) => state.setCustomer)
     const cleanOrder = useStore((state) => state.cleanOrder)
 
-    const [deliveryType, setDeliveryType] = useState<DeliveryType>("PICKUP")
-    const [receiptUrl, setReceiptUrl] = useState<string>("")
-    const [receiptId, setReceiptId] = useState<string>("")
     const [isUploading, setIsUploading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,8 +33,10 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const uploadReceipt = async (file: File) => {
         setIsUploading(true)
         try {
+            // Comprimimos en el navegador para no chocar con el limite de subida.
+            const optimized = await compressImage(file)
             const formData = new FormData()
-            formData.append("file", file)
+            formData.append("file", optimized)
             const request = await fetch("/order/api/receipt", {
                 method: "POST",
                 body: formData,
@@ -45,8 +45,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             if (!request.ok) {
                 throw new Error(response?.error ?? "No se pudo subir el comprobante")
             }
-            setReceiptUrl(response.url)
-            setReceiptId(response.publicId)
+            setCustomer({ receiptUrl: response.url, receiptId: response.publicId })
             toast.success("Comprobante cargado")
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "No se pudo subir el comprobante")
@@ -63,8 +62,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     }
 
     const removeReceipt = () => {
-        setReceiptUrl("")
-        setReceiptId("")
+        setCustomer({ receiptUrl: "", receiptId: "" })
         if (fileInputRef.current) fileInputRef.current.value = ""
     }
 
@@ -76,11 +74,11 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             return
         }
 
-        const formData = new FormData(event.currentTarget)
-        const name = String(formData.get("name") ?? "").trim()
-        const phone = String(formData.get("phone") ?? "").trim()
-        const email = String(formData.get("email") ?? "").trim()
-        const address = String(formData.get("address") ?? "").trim()
+        const name = customer.name.trim()
+        const phone = customer.phone.trim()
+        const email = customer.email.trim()
+        const address = customer.address.trim()
+        const deliveryType = customer.deliveryType
 
         if (name.length < 3) {
             toast.error("Ingresa tu nombre")
@@ -94,7 +92,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             toast.error("Ingresa la direccion de entrega")
             return
         }
-        if (!receiptUrl || !receiptId) {
+        if (!customer.receiptUrl || !customer.receiptId) {
             toast.error("Sube el comprobante de pago para continuar")
             return
         }
@@ -105,8 +103,8 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             email,
             deliveryType,
             address,
-            receiptUrl,
-            receiptId,
+            receiptUrl: customer.receiptUrl,
+            receiptId: customer.receiptId,
             total,
             order: order.map((item: OrderItem) => ({
                 id: item.id,
@@ -150,9 +148,9 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
         toast.success("Pedido realizado con exito")
         mutate("/admin/orders/api")
         notifyOrderUpdate()
+        // Limpia el carrito y los datos del cliente guardados en localStorage.
         cleanOrder()
-        removeReceipt()
-        setDeliveryType("PICKUP")
+        if (fileInputRef.current) fileInputRef.current.value = ""
         setIsSubmitting(false)
         onSuccess()
     }
@@ -163,44 +161,68 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     return (
         <form onSubmit={handleSubmit} className="mt-3 w-full space-y-3" noValidate>
             <div className="space-y-2">
-                <input type="text" name="name" placeholder="Tu nombre *" aria-label="Nombre" className={inputClass} />
-                <input type="tel" name="phone" placeholder="Tu celular *" aria-label="Celular" className={inputClass} />
-                <input type="email" name="email" placeholder="Tu correo (opcional)" aria-label="Correo" className={inputClass} />
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Tu nombre *"
+                    aria-label="Nombre"
+                    className={inputClass}
+                    value={customer.name}
+                    onChange={(e) => setCustomer({ name: e.target.value })}
+                />
+                <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Tu celular *"
+                    aria-label="Celular"
+                    className={inputClass}
+                    value={customer.phone}
+                    onChange={(e) => setCustomer({ phone: e.target.value })}
+                />
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Tu correo (opcional)"
+                    aria-label="Correo"
+                    className={inputClass}
+                    value={customer.email}
+                    onChange={(e) => setCustomer({ email: e.target.value })}
+                />
             </div>
 
             <fieldset className="space-y-2">
                 <legend className="text-sm font-semibold text-slate-700">Tipo de entrega</legend>
                 <div className="grid grid-cols-2 gap-2">
                     <label
-                        className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-sm font-medium transition ${deliveryType === "PICKUP" ? "border-slate-900 bg-slate-900 text-white" : "border-gray-200 bg-white text-slate-700"}`}
+                        className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-sm font-medium transition ${customer.deliveryType === "PICKUP" ? "border-slate-900 bg-slate-900 text-white" : "border-gray-200 bg-white text-slate-700"}`}
                     >
                         <input
                             type="radio"
                             name="deliveryType"
                             value="PICKUP"
                             className="sr-only"
-                            checked={deliveryType === "PICKUP"}
-                            onChange={() => setDeliveryType("PICKUP")}
+                            checked={customer.deliveryType === "PICKUP"}
+                            onChange={() => setCustomer({ deliveryType: "PICKUP" })}
                         />
                         Retiro en tienda
                     </label>
                     <label
-                        className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-sm font-medium transition ${deliveryType === "DELIVERY" ? "border-slate-900 bg-slate-900 text-white" : "border-gray-200 bg-white text-slate-700"}`}
+                        className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-sm font-medium transition ${customer.deliveryType === "DELIVERY" ? "border-slate-900 bg-slate-900 text-white" : "border-gray-200 bg-white text-slate-700"}`}
                     >
                         <input
                             type="radio"
                             name="deliveryType"
                             value="DELIVERY"
                             className="sr-only"
-                            checked={deliveryType === "DELIVERY"}
-                            onChange={() => setDeliveryType("DELIVERY")}
+                            checked={customer.deliveryType === "DELIVERY"}
+                            onChange={() => setCustomer({ deliveryType: "DELIVERY" })}
                         />
                         Envio a domicilio
                     </label>
                 </div>
             </fieldset>
 
-            {deliveryType === "DELIVERY" && (
+            {customer.deliveryType === "DELIVERY" && (
                 <div className="space-y-2">
                     <textarea
                         name="address"
@@ -208,6 +230,8 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
                         placeholder="Direccion de entrega *"
                         aria-label="Direccion de entrega"
                         className={inputClass}
+                        value={customer.address}
+                        onChange={(e) => setCustomer({ address: e.target.value })}
                     />
                     <div
                         role="alert"
@@ -220,10 +244,10 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
 
             <div className="space-y-2">
                 <p className="text-sm font-semibold text-slate-700">Comprobante de pago *</p>
-                {receiptUrl ? (
+                {customer.receiptUrl ? (
                     <div className="space-y-2">
                         <div className="relative h-40 w-full overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                            <Image src={receiptUrl} alt="Comprobante de pago" fill className="object-contain" />
+                            <Image src={customer.receiptUrl} alt="Comprobante de pago" fill className="object-contain" />
                         </div>
                         <button
                             type="button"
@@ -246,7 +270,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
                         <span className="font-semibold text-slate-700">
                             {isUploading ? "Subiendo..." : "Subir comprobante"}
                         </span>
-                        <span>JPG, PNG o WEBP (max 5MB)</span>
+                        <span>JPG, PNG o WEBP</span>
                     </label>
                 )}
             </div>

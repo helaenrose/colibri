@@ -60,6 +60,7 @@ export const CategorySchema = z.object({
     level: CategoryLevelEnum,
     parentId: z.string().trim().optional().or(z.literal('')),
     code: z.string().trim().optional().or(z.literal('')),
+    image: z.string().trim().optional().or(z.literal('')),
 }).superRefine((data, ctx) => {
     // Departamento no tiene padre; categoria y subcategoria si
     if (data.level !== 'DEPARTMENT' && (!data.parentId || data.parentId.trim() === '')) {
@@ -102,6 +103,7 @@ export const BusinessProfileSchema = z.object({
     name: z.string()
         .trim()
         .min(2, { message: 'El nombre del negocio es obligatorio' }),
+    tagline: z.string().trim().max(280, { message: 'El texto es demasiado largo (max 280 caracteres)' }).optional().or(z.literal('')),
     phone: z.string().trim().optional().or(z.literal('')),
     email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal('')),
     address: z.string().trim().optional().or(z.literal('')),

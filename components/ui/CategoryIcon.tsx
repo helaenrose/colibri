@@ -1,5 +1,4 @@
 'use client'
-import { Category } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -7,14 +6,24 @@ import { useState } from 'react'
 
 
 interface Props {
-    category: Category
+    category: {
+        id: string
+        name: string
+        slug: string
+        image?: string | null
+    }
 }
+
+const isRenderableSrc = (value: string) => value.startsWith('/') || value.startsWith('http')
 
 const CategoryIcon = ({ category }: Props) => {
 
     const urlParams = useParams<{ category: string }>()
     const isActive = urlParams.category === category.slug
-    const [iconSrc, setIconSrc] = useState(`/icon_${category.slug}.png`)
+    // Prioriza la imagen subida por el admin; si no hay, usa el icono por slug y luego el generico
+    const [iconSrc, setIconSrc] = useState(
+        category.image && isRenderableSrc(category.image) ? category.image : `/icon_${category.slug}.png`
+    )
 
     return (
         <div className={`shrink-0 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:bg-amber-50 md:w-full md:rounded-none md:border-0 md:border-t md:border-gray-200 md:p-2 md:shadow-none md:hover:translate-y-0 md:hover:border-gray-200 ${isActive ? 'ring-2 ring-amber-300 md:bg-amber-200 md:ring-0 md:shadow' : ''}`}>
@@ -24,6 +33,8 @@ const CategoryIcon = ({ category }: Props) => {
                     fill
                     src={iconSrc}
                     alt={category.name}
+                    sizes="56px"
+                    className="object-contain"
                     onError={() => setIconSrc('/icon_generic.png')}
                 />
                 </div>

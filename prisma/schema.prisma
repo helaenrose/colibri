@@ -20,6 +20,7 @@ model Category {
   slug     String        @unique
   level    CategoryLevel @default(DEPARTMENT)
   code     String?       @unique
+  image    String?
   parentId String?
   parent   Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children Category[]    @relation("CategoryHierarchy")
@@ -74,6 +75,7 @@ model BusinessProfile {
   id              String   @id @default(cuid())
   name            String
   image           String?
+  tagline         String?
   phone           String?
   email           String?
   address         String?

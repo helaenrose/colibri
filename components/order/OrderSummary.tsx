@@ -2,7 +2,7 @@
 
 import { useStore } from "@/src/store/store"
 import ProductDetails from "./ProductDetails"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { formatCurrency } from "@/src/utils"
 import OrderCheckoutForm from "./OrderCheckoutForm"
 
@@ -12,6 +12,11 @@ const OrderSummary = () => {
     const total = useMemo(() => order.reduce((total, item) => total + (item.quantity * item.price), 0), [order])
     const totalItems = useMemo(() => order.reduce((acc, item) => acc + item.quantity, 0), [order])
     const [isOpen, setIsOpen] = useState(false)
+
+    // El carrito se rehidrata desde localStorage en el cliente. Mostramos el conteo
+    // real solo despues de montar para evitar un desajuste de hidratacion con el SSR.
+    const [hydrated, setHydrated] = useState(false)
+    useEffect(() => setHydrated(true), [])
 
     return (
         <>
@@ -23,7 +28,7 @@ const OrderSummary = () => {
                 aria-controls="order-summary-drawer"
             >
                 Mi pedido
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{totalItems}</span>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{hydrated ? totalItems : 0}</span>
             </button>
 
             {isOpen && (

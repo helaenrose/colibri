@@ -8,12 +8,13 @@ import { toast } from "react-toastify"
 interface ProfileImageUploadProps {
     image?: string | null
     onChange: (url: string) => void
+    label?: string
 }
 
 const isRenderableSrc = (value: string) =>
     value.startsWith('/') || value.startsWith('http')
 
-const ProfileImageUpload = ({ image, onChange }: ProfileImageUploadProps) => {
+const ProfileImageUpload = ({ image, onChange, label = 'Imagen del negocio' }: ProfileImageUploadProps) => {
     const inputRef = useRef<HTMLInputElement>(null)
     const [currentImage, setCurrentImage] = useState(image ?? '')
     const [uploading, setUploading] = useState(false)
@@ -47,7 +48,7 @@ const ProfileImageUpload = ({ image, onChange }: ProfileImageUploadProps) => {
 
     return (
         <div className="space-y-2">
-            <span className="text-sm font-semibold text-slate-800">Imagen del negocio</span>
+            <span className="text-sm font-semibold text-slate-800">{label}</span>
 
             <input
                 ref={inputRef}
