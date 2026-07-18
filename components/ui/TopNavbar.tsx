@@ -3,8 +3,6 @@ import { getBusinessProfile } from "@/src/lib/business-profile"
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/order/abarrotes", label: "Comprar" },
-  { href: "/admin/orders", label: "Admin" },
 ]
 
 const TopNavbar = async () => {

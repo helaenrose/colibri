@@ -12,6 +12,7 @@ export type AdminCategoryItem = {
     slug: string
     level: 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
     code: string | null
+    image: string | null
     parentId: string | null
     productCount: number
 }
@@ -30,6 +31,7 @@ const getCategories = async (): Promise<AdminCategoryItem[]> => {
             slug: category.slug,
             level: category.level,
             code: category.code,
+            image: category.image,
             parentId: category.parentId,
             productCount: category._count.Products,
         }))
@@ -40,6 +42,7 @@ const getCategories = async (): Promise<AdminCategoryItem[]> => {
             slug: category.slug,
             level: category.level,
             code: category.code ?? null,
+            image: null,
             parentId: category.parentId ?? null,
             productCount: 0,
         }))

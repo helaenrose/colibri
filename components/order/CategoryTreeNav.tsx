@@ -21,11 +21,13 @@ const findActivePath = (nodes: CategoryNode[], activeSlug: string, path: string[
     return null
 }
 
-const DepartmentIcon = ({ slug, name }: { slug: string; name: string }) => {
-    const [src, setSrc] = useState(`/icon_${slug}.png`)
+const isRenderableSrc = (value: string) => value.startsWith('/') || value.startsWith('http')
+
+const DepartmentIcon = ({ slug, name, image }: { slug: string; name: string; image?: string | null }) => {
+    const [src, setSrc] = useState(image && isRenderableSrc(image) ? image : `/icon_${slug}.png`)
     return (
         <span className="relative size-8 shrink-0 md:size-10">
-            <Image fill src={src} alt="" aria-hidden onError={() => setSrc('/icon_generic.png')} className="object-contain" />
+            <Image fill sizes="40px" src={src} alt="" aria-hidden onError={() => setSrc('/icon_generic.png')} className="object-contain" />
             <span className="sr-only">{name}</span>
         </span>
     )
@@ -60,7 +62,7 @@ const CategoryTreeNav = ({ tree }: Props) => {
                                 aria-current={isActive ? 'page' : undefined}
                                 className={`flex flex-1 items-center gap-3 px-3 py-3 text-sm font-bold uppercase tracking-[0.06em] text-slate-800 transition-colors hover:bg-amber-50 ${isActive ? 'bg-amber-100' : ''}`}
                             >
-                                <DepartmentIcon slug={department.slug} name={department.name} />
+                                <DepartmentIcon slug={department.slug} name={department.name} image={department.image} />
                                 <span className="text-left">{department.name}</span>
                             </Link>
                             {department.children.length > 0 ? (

@@ -48,8 +48,8 @@ export default async function Home() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.16),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2f7_100%)] text-slate-900">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
         {/* Hero */}
-        <div className="grid gap-8 rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:p-10">
-          <div className="flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
+        <div className="rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8 lg:p-10">
+          <div className="flex flex-col items-center gap-5 text-center">
             <span className="relative h-28 w-28 overflow-hidden rounded-full bg-slate-900 sm:h-32 sm:w-32">
               <Image
                 fill
@@ -69,7 +69,7 @@ export default async function Home() {
                 {profile.name}
               </h1>
               <p className="max-w-md text-pretty text-base leading-relaxed text-slate-600">
-                Tus productos de siempre, al alcance de un clic. Explora el catalogo, arma tu pedido y recogelo listo.
+                {profile.tagline}
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
@@ -97,16 +97,6 @@ export default async function Home() {
                   Danos tu resena en Google
                 </a>
               ) : null}
-            </div>
-          </div>
-
-          {/* Categorías */}
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Nuestros departamentos</p>
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {departments.map((department) => (
-                <CategoryIcon key={department.id} category={department} />
-              ))}
             </div>
           </div>
         </div>
@@ -189,6 +179,19 @@ export default async function Home() {
             </div>
           </footer>
         ) : null}
+
+        {/* Departamentos */}
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Nuestros departamentos</p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+            Explora el catalogo
+          </h2>
+          <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {departments.map((department) => (
+              <CategoryIcon key={department.id} category={department} />
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   )

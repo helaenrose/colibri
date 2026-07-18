@@ -18,7 +18,7 @@ export const createCategory = async (data: unknown) => {
         return { errors: result.error.issues }
     }
 
-    const { name, level, parentId, code } = result.data
+    const { name, level, parentId, code, image } = result.data
 
     // Construir slug incluyendo la ruta del padre para evitar colisiones entre ramas
     let parent = null
@@ -55,6 +55,7 @@ export const createCategory = async (data: unknown) => {
                 level: level as CategoryLevel,
                 parentId: parentId || null,
                 code: level === 'SUBCATEGORY' ? (code || null) : null,
+                image: image || null,
             },
         })
     } catch {

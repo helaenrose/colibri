@@ -7,6 +7,8 @@ import { useToastZodErrors } from "@/src/hooks/useToastZodErrors"
 import { FormEvent, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
+import Image from "next/image"
+import ProfileImageUpload from "@/components/profile/ProfileImageUpload"
 import type { AdminCategoryItem } from "@/app/admin/(protected)/categories/page"
 
 type Level = 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
@@ -31,6 +33,9 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
     const [level, setLevel] = useState<Level>('DEPARTMENT')
     const [parentId, setParentId] = useState('')
     const [code, setCode] = useState('')
+    const [image, setImage] = useState('')
+    // Cambia para forzar el remount del componente de imagen y limpiarlo tras crear
+    const [uploadKey, setUploadKey] = useState(0)
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -64,6 +69,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
             level,
             parentId: level === 'DEPARTMENT' ? '' : parentId,
             code: level === 'SUBCATEGORY' ? code : '',
+            image,
         }
         const result = CategorySchema.safeParse(data)
         if (!result.success) {
@@ -80,6 +86,8 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
             toast.success(`${levelLabels[level]} creada`)
             setName('')
             setCode('')
+            setImage('')
+            setUploadKey((k) => k + 1)
             router.refresh()
         })
     }
@@ -107,7 +115,20 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                     className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                     style={{ marginLeft: depth * 16 }}
                 >
-                    <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-3">
+                        {node.image ? (
+                            <span className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                                <Image
+                                    src={node.image}
+                                    alt={node.name}
+                                    fill
+                                    sizes="40px"
+                                    unoptimized={node.image.startsWith('http') && !node.image.includes('res.cloudinary.com')}
+                                    className="object-cover"
+                                />
+                            </span>
+                        ) : null}
+                        <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${levelBadge[node.level]}`}>
                                 {levelLabels[node.level]}
@@ -122,6 +143,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         <p className="mt-0.5 text-xs text-slate-500">
                             {node.productCount} {node.productCount === 1 ? 'producto' : 'productos'}
                         </p>
+                        </div>
                     </div>
                     <button
                         type="button"
@@ -222,6 +244,14 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         />
                     </div>
                 ) : null}
+
+                <div className="mt-4">
+                    <ProfileImageUpload
+                        key={uploadKey}
+                        label={`Foto de ${levelLabels[level].toLowerCase()} (opcional)`}
+                        onChange={setImage}
+                    />
+                </div>
 
                 <button
                     type="submit"

@@ -18,6 +18,7 @@ export const updateBusinessProfile = async (data: unknown) => {
 
     const payload = {
         name: result.data.name,
+        tagline: result.data.tagline || null,
         phone: result.data.phone || null,
         email: result.data.email || null,
         address: result.data.address || null,
