@@ -72,12 +72,11 @@ BETTER_AUTH_SECRET=
 # Opcional: URL base de auth (fallback a la URL de Vercel en produccion)
 BETTER_AUTH_URL=
 
-# Cloudinary (server + widget cliente)
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+# Cloudinary: una sola variable con las tres credenciales (Panel -> API environment variable)
+# Formato: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+CLOUDINARY_URL=
+# Opcional: solo si usas el widget de subida del formulario de productos (lado cliente)
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
-NEXT_PUBLIC_CLOUDINARY_API_KEY=
 
 # Opcional (default: 8000)
 DB_QUERY_TIMEOUT_MS=8000
@@ -134,11 +133,8 @@ http://localhost:3000
 - `DATABASE_URL_UNPOOLED`: conexion directa sin pooling (obligatoria)
 - `BETTER_AUTH_SECRET`: secreto para firmar sesiones (obligatoria)
 - `BETTER_AUTH_URL`: URL base de auth (opcional, fallback a la URL de Vercel)
-- `CLOUDINARY_CLOUD_NAME`: cloud name (server)
-- `CLOUDINARY_API_KEY`: api key (server)
-- `CLOUDINARY_API_SECRET`: secreto de Cloudinary (server)
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: cloud name para el widget de subida
-- `NEXT_PUBLIC_CLOUDINARY_API_KEY`: api key publica para el widget de subida
+- `CLOUDINARY_URL`: credenciales de Cloudinary en una sola cadena `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` (obligatoria para subir comprobantes/imagenes desde el servidor)
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: opcional, solo para el widget de subida del formulario de productos (lado cliente)
 - `DB_QUERY_TIMEOUT_MS`: timeout de queries Prisma con fallback de 8000ms
 - `DEMO_FALLBACK_ENABLED`: habilita fallback demo (`true/false`)
 - `ADMIN_BASIC_USER` y `ADMIN_BASIC_PASSWORD`: acceso de emergencia para rutas `/admin`
