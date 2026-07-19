@@ -1,11 +1,18 @@
 import { v2 as cloudinary } from "cloudinary"
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
-})
+// El SDK de Cloudinary auto-detecta CLOUDINARY_URL (cloudinary://api_key:api_secret@cloud_name),
+// que ya incluye las tres credenciales. Si esa variable existe, solo forzamos HTTPS y dejamos
+// que el SDK use la config parseada. Si no, caemos a las tres variables separadas.
+if (process.env.CLOUDINARY_URL) {
+    cloudinary.config({ secure: true })
+} else {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+        secure: true,
+    })
+}
 
 export const RECEIPTS_FOLDER = "colibri/comprobantes"
 
