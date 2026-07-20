@@ -9,6 +9,7 @@ type DemoProduct = {
   price: number
   image: string
   stock: number
+  active: boolean
   categoryId: string
   category: DemoCategory
 }
@@ -58,6 +59,7 @@ const initialDemoProducts: DemoProduct[] = seedProducts.map((product, index) => 
   price: product.price,
   image: product.image,
   stock: product.stock ?? 0,
+  active: true,
   categoryId: product.categoryId,
   category: categoryById.get(product.categoryId)!,
 }))
@@ -210,6 +212,7 @@ export const createDemoProduct = (data: { name: string; price: number; stock: nu
   const product = {
     id: createId('demo-product'),
     ...data,
+    active: true,
     category,
   }
 
@@ -224,9 +227,12 @@ export const updateDemoProduct = (
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
 
+  const existing = state.products.find((product) => product.id === id)
+
   const updatedProduct = {
     id,
     ...data,
+    active: existing?.active ?? true,
     category,
   }
 
