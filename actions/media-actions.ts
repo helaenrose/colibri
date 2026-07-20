@@ -8,10 +8,12 @@ import { revalidatePath } from 'next/cache'
 const PLACEHOLDER_IMAGE = '/icon_generic.png'
 
 type ActionResult = {
-    success?: boolean
-    errors?: { message: string }[]
+    success: boolean
+    message?: string
     deleted?: number
 }
+
+const fail = (message: string): ActionResult => ({ success: false, message })
 
 const revalidateAll = () => {
     revalidatePath('/admin/media')
@@ -23,10 +25,10 @@ const revalidateAll = () => {
 // Renombra una imagen de la galeria
 export const renameMediaAsset = async (id: string, name: string): Promise<ActionResult> => {
     if (!(await isAdminAuthenticated())) {
-        return { errors: [{ message: 'No autorizado.' }] }
+        return fail('No autorizado.')
     }
     const clean = name.trim()
-    if (!clean) return { errors: [{ message: 'El nombre no puede ir vacio.' }] }
+    if (!clean) return fail('El nombre no puede ir vacio.')
 
     try {
         await prisma.mediaAsset.update({ where: { id }, data: { name: clean } })
@@ -34,7 +36,7 @@ export const renameMediaAsset = async (id: string, name: string): Promise<Action
         return { success: true }
     } catch (error) {
         console.log('[v0] renameMediaAsset error:', error)
-        return { errors: [{ message: 'No se pudo renombrar la imagen.' }] }
+        return fail('No se pudo renombrar la imagen.')
     }
 }
 
@@ -42,10 +44,10 @@ export const renameMediaAsset = async (id: string, name: string): Promise<Action
 // y repara las imagenes primarias de productos/categorias que apuntaban a esas URLs.
 export const deleteMediaAssets = async (ids: string[]): Promise<ActionResult> => {
     if (!(await isAdminAuthenticated())) {
-        return { errors: [{ message: 'No autorizado.' }] }
+        return fail('No autorizado.')
     }
     const uniqueIds = [...new Set((ids ?? []).filter(Boolean))]
-    if (uniqueIds.length === 0) return { errors: [{ message: 'Selecciona al menos una imagen.' }] }
+    if (uniqueIds.length === 0) return fail('Selecciona al menos una imagen.')
 
     try {
         const assets = await prisma.mediaAsset.findMany({
@@ -76,16 +78,16 @@ export const deleteMediaAssets = async (ids: string[]): Promise<ActionResult> =>
         return { success: true, deleted: assets.length }
     } catch (error) {
         console.log('[v0] deleteMediaAssets error:', error)
-        return { errors: [{ message: 'No se pudieron eliminar las imagenes.' }] }
+        return fail('No se pudieron eliminar las imagenes.')
     }
 }
 
 // Asocia una imagen a un producto y la fija como imagen principal de visualizacion
 export const addProductAssociation = async (mediaId: string, productId: string): Promise<ActionResult> => {
-    if (!(await isAdminAuthenticated())) return { errors: [{ message: 'No autorizado.' }] }
+    if (!(await isAdminAuthenticated())) return fail('No autorizado.')
     try {
         const media = await prisma.mediaAsset.findUnique({ where: { id: mediaId } })
-        if (!media) return { errors: [{ message: 'La imagen no existe.' }] }
+        if (!media) return fail('La imagen no existe.')
 
         await prisma.productImage.upsert({
             where: { mediaId_productId: { mediaId, productId } },
@@ -99,13 +101,13 @@ export const addProductAssociation = async (mediaId: string, productId: string):
         return { success: true }
     } catch (error) {
         console.log('[v0] addProductAssociation error:', error)
-        return { errors: [{ message: 'No se pudo asociar la imagen al producto.' }] }
+        return fail('No se pudo asociar la imagen al producto.')
     }
 }
 
 // Quita la asociacion imagen-producto. Si era la imagen principal, cae a otra asociada o al placeholder.
 export const removeProductAssociation = async (mediaId: string, productId: string): Promise<ActionResult> => {
-    if (!(await isAdminAuthenticated())) return { errors: [{ message: 'No autorizado.' }] }
+    if (!(await isAdminAuthenticated())) return fail('No autorizado.')
     try {
         const media = await prisma.mediaAsset.findUnique({ where: { id: mediaId } })
         await prisma.productImage.deleteMany({ where: { mediaId, productId } })
@@ -129,16 +131,16 @@ export const removeProductAssociation = async (mediaId: string, productId: strin
         return { success: true }
     } catch (error) {
         console.log('[v0] removeProductAssociation error:', error)
-        return { errors: [{ message: 'No se pudo quitar la asociacion.' }] }
+        return fail('No se pudo quitar la asociacion.')
     }
 }
 
 // Asocia una imagen a una categoria (cualquier nivel) y la fija como imagen de la categoria
 export const addCategoryAssociation = async (mediaId: string, categoryId: string): Promise<ActionResult> => {
-    if (!(await isAdminAuthenticated())) return { errors: [{ message: 'No autorizado.' }] }
+    if (!(await isAdminAuthenticated())) return fail('No autorizado.')
     try {
         const media = await prisma.mediaAsset.findUnique({ where: { id: mediaId } })
-        if (!media) return { errors: [{ message: 'La imagen no existe.' }] }
+        if (!media) return fail('La imagen no existe.')
 
         await prisma.categoryImage.upsert({
             where: { mediaId_categoryId: { mediaId, categoryId } },
@@ -151,13 +153,13 @@ export const addCategoryAssociation = async (mediaId: string, categoryId: string
         return { success: true }
     } catch (error) {
         console.log('[v0] addCategoryAssociation error:', error)
-        return { errors: [{ message: 'No se pudo asociar la imagen a la categoria.' }] }
+        return fail('No se pudo asociar la imagen a la categoria.')
     }
 }
 
 // Quita la asociacion imagen-categoria. Si era la imagen de la categoria, cae a otra asociada o a null.
 export const removeCategoryAssociation = async (mediaId: string, categoryId: string): Promise<ActionResult> => {
-    if (!(await isAdminAuthenticated())) return { errors: [{ message: 'No autorizado.' }] }
+    if (!(await isAdminAuthenticated())) return fail('No autorizado.')
     try {
         const media = await prisma.mediaAsset.findUnique({ where: { id: mediaId } })
         await prisma.categoryImage.deleteMany({ where: { mediaId, categoryId } })
@@ -181,6 +183,6 @@ export const removeCategoryAssociation = async (mediaId: string, categoryId: str
         return { success: true }
     } catch (error) {
         console.log('[v0] removeCategoryAssociation error:', error)
-        return { errors: [{ message: 'No se pudo quitar la asociacion.' }] }
+        return fail('No se pudo quitar la asociacion.')
     }
 }
