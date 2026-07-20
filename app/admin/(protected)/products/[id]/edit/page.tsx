@@ -29,7 +29,7 @@ const EditProduct = async ({ params }: { params: Promise<{ id: string }> }) => {
         <div>
             <Heading>Editar producto: {product.name}</Heading>
 
-            <GoBackButton />
+            <GoBackButton href="/admin/products" />
 
             <EditProductForm>
                 <ProductForm product={product} />
