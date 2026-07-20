@@ -1,6 +1,7 @@
 import OrderSidebar from "@/components/order/OrderSidebar";
 import OrderSummary from "@/components/order/OrderSummary";
 import Notification from "@/components/ui/Notification";
+import InstructionsMarquee from "@/components/ui/InstructionsMarquee";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ const OrderLayout = ({ children, }: Readonly<{ children: React.ReactNode; }>) =>
 
     return (
         <>
+            <InstructionsMarquee />
             <div className="flex min-h-screen w-full max-w-full flex-col md:flex-row overflow-x-hidden">
 
                 <OrderSidebar />

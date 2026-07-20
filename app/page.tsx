@@ -5,7 +5,11 @@ import { prisma } from "@/src/lib/prisma"
 import { categories as seedCategories } from "@/prisma/data/categories"
 import { getBusinessProfile, getBusinessLogo } from "@/src/lib/business-profile"
 import { getBankAccounts } from "@/src/lib/bank-accounts"
+import { buildCategoryTree, pruneEmptyCategories } from "@/src/lib/category-utils"
+import { buildWhatsappUrl } from "@/src/lib/whatsapp"
 import CategoryIcon from "@/components/ui/CategoryIcon"
+import InstructionsMarquee from "@/components/ui/InstructionsMarquee"
+import { FaWhatsapp } from "react-icons/fa"
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getBusinessProfile()
@@ -17,12 +21,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const getDepartments = async () => {
   try {
-    const departments = await prisma.category.findMany({
-      where: { level: "DEPARTMENT" },
-      orderBy: { name: "asc" },
+    const categories = await prisma.category.findMany()
+    if (categories.length === 0) throw new Error("empty")
+
+    // Ids de categorias con al menos un producto asociado directamente
+    const grouped = await prisma.product.groupBy({
+      by: ["categoryId"],
+      where: { active: true, stock: { gt: 0 } },
+      _count: { _all: true },
     })
-    if (departments.length > 0) return departments
-    return seedCategories.filter((c) => c.level === "DEPARTMENT")
+    const withProducts = new Set(grouped.map((g) => g.categoryId))
+
+    // Poda el arbol y devuelve solo los departamentos con productos en su subarbol
+    const tree = buildCategoryTree(categories)
+    return pruneEmptyCategories(tree, withProducts).filter((n) => n.level === "DEPARTMENT")
   } catch {
     return seedCategories.filter((c) => c.level === "DEPARTMENT")
   }
@@ -37,6 +49,7 @@ export default async function Home() {
   const logoSrc = getBusinessLogo(profile.image)
   const logoUnoptimized = logoSrc.startsWith("http") && !logoSrc.includes("res.cloudinary.com")
   const firstCategory = departments[0]?.slug ?? "abarrotes-secos"
+  const whatsappUrl = buildWhatsappUrl(profile.phone)
 
   const contactItems = [
     profile.phone ? { label: "Telefono", value: profile.phone, href: `tel:${profile.phone.replace(/\s+/g, "")}` } : null,
@@ -46,6 +59,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.16),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2f7_100%)] text-slate-900">
+      <InstructionsMarquee />
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
         {/* Hero */}
         <div className="rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8 lg:p-10">
@@ -79,12 +93,15 @@ export default async function Home() {
               >
                 Ver catalogo
               </Link>
-              {contactItems.find((c) => c.label === "Telefono") ? (
+              {whatsappUrl ? (
                 <a
-                  href={contactItems.find((c) => c.label === "Telefono")!.href!}
-                  className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-950"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#1ebe57]"
                 >
-                  Llamar ahora
+                  <FaWhatsapp className="h-5 w-5" aria-hidden="true" />
+                  Escríbenos por WhatsApp
                 </a>
               ) : null}
               {profile.googleReviewsUrl ? (

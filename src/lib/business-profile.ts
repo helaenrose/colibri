@@ -3,6 +3,15 @@ import { prisma } from "@/src/lib/prisma"
 export const defaultTagline =
     "Tus productos de siempre, al alcance de un clic. Explora el catalogo, arma tu pedido y recogelo listo."
 
+export const defaultInstructionSteps = [
+    "Selecciona los productos",
+    "Elige el tipo de retiro",
+    "Realiza tu pago por transferencia bancaria",
+    "Sube una foto clara de tu comprobante de pago en el carrito",
+    "Completa los datos de tu Orden",
+    "Confirma tu pedido y listo!",
+]
+
 export type BusinessProfileData = {
     id: string | null
     name: string
@@ -12,6 +21,7 @@ export type BusinessProfileData = {
     email: string | null
     address: string | null
     googleReviewsUrl: string | null
+    instructionSteps: string[]
 }
 
 export const defaultBusinessProfile: BusinessProfileData = {
@@ -23,6 +33,7 @@ export const defaultBusinessProfile: BusinessProfileData = {
     email: "contacto@mitienda.com",
     address: "Calle Principal 123, Centro",
     googleReviewsUrl: null,
+    instructionSteps: defaultInstructionSteps,
 }
 
 export const getBusinessProfile = async (): Promise<BusinessProfileData> => {
@@ -41,6 +52,10 @@ export const getBusinessProfile = async (): Promise<BusinessProfileData> => {
             email: profile.email,
             address: profile.address,
             googleReviewsUrl: profile.googleReviewsUrl,
+            instructionSteps:
+                profile.instructionSteps && profile.instructionSteps.length > 0
+                    ? profile.instructionSteps
+                    : defaultInstructionSteps,
         }
     } catch {
         return defaultBusinessProfile

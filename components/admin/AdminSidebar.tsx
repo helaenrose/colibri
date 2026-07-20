@@ -8,6 +8,7 @@ const adminNavigation = [
     { url: '/admin/completed', text: 'Ordenes completadas', blank: false },
     { url: '/admin/products', text: 'Productos', blank: false },
     { url: '/admin/categories', text: 'Categorias', blank: false },
+    { url: '/admin/media', text: 'Galeria de imagenes', blank: false },
     { url: '/admin/profile', text: 'Mi perfil', blank: false },
     { url: '/order/abarrotes', text: 'Ver catalogo', blank: true },
 ]

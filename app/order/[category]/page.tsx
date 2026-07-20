@@ -19,10 +19,10 @@ const getCategoryWithProducts = async (slug: string) => {
             return { title: "Productos", products: [], subNav: [] as SubNavItem[], parent: null as Category | null }
         }
 
-        // Productos del nodo actual + todos sus descendientes, solo con stock
+        // Productos del nodo actual + todos sus descendientes, solo activos y con stock
         const ids = collectDescendantIds(all, current.id)
         const products = await prisma.product.findMany({
-            where: { categoryId: { in: ids }, stock: { gt: 0 } },
+            where: { categoryId: { in: ids }, stock: { gt: 0 }, active: true },
             include: { category: true },
         })
 
