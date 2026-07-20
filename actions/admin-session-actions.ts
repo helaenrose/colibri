@@ -1,6 +1,7 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
+import { auth } from "@/src/lib/auth"
 import {
     EMERGENCY_COOKIE_NAME,
     checkEmergencyCredentials,
@@ -34,4 +35,25 @@ export const emergencyLogin = async (user: string, password: string) => {
 export const clearEmergencySession = async () => {
     const cookieStore = await cookies()
     cookieStore.delete(EMERGENCY_COOKIE_NAME)
+}
+
+/**
+ * Cierra la sesión del administrador completamente del lado del servidor.
+ * Esto evita depender del fetch del cliente de Better Auth, que es poco
+ * fiable dentro del iframe de la vista previa (origen cruzado).
+ */
+export const logoutAdmin = async () => {
+    // Cierra la sesión de Better Auth (si existe). El plugin nextCookies()
+    // se encarga de borrar la cookie de sesión en la respuesta.
+    try {
+        await auth.api.signOut({ headers: await headers() })
+    } catch {
+        // Sin sesión de Better Auth (p. ej. acceso de emergencia): ignorar.
+    }
+
+    // Limpia también la cookie del acceso de emergencia.
+    const cookieStore = await cookies()
+    cookieStore.delete(EMERGENCY_COOKIE_NAME)
+
+    return { ok: true as const }
 }

@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/src/lib/auth-client"
-import { clearEmergencySession } from "@/actions/admin-session-actions"
+import { logoutAdmin } from "@/actions/admin-session-actions"
 
 export default function LogoutButton() {
     const router = useRouter()
@@ -11,15 +10,16 @@ export default function LogoutButton() {
 
     const handleLogout = async () => {
         setLoading(true)
-        // Cierra la sesión de Better Auth (si existe) y limpia el acceso de emergencia.
         try {
-            await authClient.signOut()
+            // Cierre de sesión del lado del servidor: borra la cookie de Better Auth
+            // y la del acceso de emergencia. Evita el fetch del cliente (poco fiable
+            // dentro del iframe de la vista previa por el origen cruzado).
+            await logoutAdmin()
+            router.replace("/admin/login")
+            router.refresh()
         } catch {
-            // Sin sesión de Better Auth (acceso de emergencia): ignorar.
+            setLoading(false)
         }
-        await clearEmergencySession()
-        router.push("/admin/login")
-        router.refresh()
     }
 
     return (
