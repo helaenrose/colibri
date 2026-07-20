@@ -19,7 +19,7 @@ export default async function AdminLayout({
         <>
             <div className="min-h-screen md:flex bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.14),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#eef2f7_100%)]">
                 {/* Sidebar de escritorio */}
-                <aside className="hidden bg-white/95 backdrop-blur md:block md:h-screen md:w-80 md:sticky md:top-0 md:border-r md:border-gray-200">
+                <aside className="hidden bg-white/95 backdrop-blur md:block md:w-80 md:sticky md:top-[63px] md:h-[calc(100vh-63px)] md:self-start md:overflow-y-auto md:border-r md:border-gray-200">
                     <AdminSidebar />
                 </aside>
 
@@ -28,7 +28,7 @@ export default async function AdminLayout({
                     <AdminSidebar />
                 </AdminMobileNav>
 
-                <main className="p-3 sm:p-4 md:flex-1 md:h-screen md:overflow-y-scroll md:p-6" role="main">
+                <main className="p-3 sm:p-4 md:flex-1 md:p-6" role="main">
                     {children}
                 </main>
             </div>

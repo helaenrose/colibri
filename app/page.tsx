@@ -72,7 +72,7 @@ export default async function Home() {
                 src={logoSrc}
                 alt={`Logotipo de ${profile.name}`}
                 sizes="128px"
-                className="object-contain p-3"
+                className="object-contain p-1.5"
               />
             </span>
             <div className="space-y-3">
