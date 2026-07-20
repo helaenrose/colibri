@@ -1,6 +1,7 @@
 import ProductPagination from "@/components/products/ProductPagination"
 import ProductSearch from "@/components/products/ProductSearch"
 import ProductTable from "@/components/products/ProductTable"
+import ProductCsvImport from "@/components/products/ProductCsvImport"
 import Heading from "@/components/ui/Heading"
 import { prisma } from "@/src/lib/prisma"
 import { getDemoProducts } from "@/src/demo/demo-store"
@@ -75,6 +76,8 @@ const ProductsPage = async ({ searchParams }: { searchParams: Promise<{ page: st
 
                 <ProductSearch />
             </div>
+
+            <ProductCsvImport />
 
             <ProductTable products={products} />
 

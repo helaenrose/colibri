@@ -97,6 +97,20 @@ export const buildCategoryTree = (categories: Category[]): CategoryNode[] => {
     return roots
 }
 
+// Poda el arbol dejando solo los nodos que tienen productos en su subarbol.
+// `withProducts` es el conjunto de ids de categoria que tienen al menos un producto asociado directamente.
+export const pruneEmptyCategories = (
+    nodes: CategoryNode[],
+    withProducts: Set<string>,
+): CategoryNode[] => {
+    const prune = (list: CategoryNode[]): CategoryNode[] => {
+        return list
+            .map((node) => ({ ...node, children: prune(node.children) }))
+            .filter((node) => withProducts.has(node.id) || node.children.length > 0)
+    }
+    return prune(nodes)
+}
+
 // Ids de un nodo y de todos sus descendientes (para filtrar productos)
 export const collectDescendantIds = (categories: Category[], rootId: string): string[] => {
     const childrenByParent = new Map<string, Category[]>()

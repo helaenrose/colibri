@@ -25,3 +25,27 @@
 		@apply transition-transform duration-200 hover:-translate-y-0.5;
 	}
 }
+
+/* Cinta de instrucciones: movimiento perpetuo horizontal */
+@keyframes marquee-scroll {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+.animate-marquee {
+	animation: marquee-scroll 30s linear infinite;
+}
+
+.marquee-group:hover .animate-marquee {
+	animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-marquee {
+		animation: none;
+	}
+}

@@ -25,6 +25,7 @@ model Category {
   parent   Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children Category[]    @relation("CategoryHierarchy")
   Products Product[]
+  images   CategoryImage[]
 
   @@index([parentId])
   @@index([level])
@@ -39,6 +40,7 @@ model Product {
   categoryId    String
   category      Category        @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
+  images        ProductImage[]
 }
 
 enum DeliveryType {
@@ -95,6 +97,54 @@ model BankAccount {
   createdAt   DateTime @default(now())
 
   @@map("bank_account")
+}
+
+// ---------- Galeria de imagenes ----------
+
+// Fuente de verdad de las imagenes subidas a Cloudinary.
+// La app siempre lee esta tabla para saber que imagenes existen.
+model MediaAsset {
+  id         String          @id @default(cuid())
+  url        String
+  publicId   String          @unique
+  name       String
+  width      Int?
+  height     Int?
+  bytes      Int?
+  format     String?
+  createdAt  DateTime        @default(now())
+  products   ProductImage[]
+  categories CategoryImage[]
+
+  @@map("media_asset")
+}
+
+// Relacion muchos-a-muchos entre imagenes y productos
+model ProductImage {
+  id        String     @id @default(cuid())
+  mediaId   String
+  media     MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([mediaId, productId])
+  @@index([productId])
+  @@map("product_image")
+}
+
+// Relacion muchos-a-muchos entre imagenes y categorias (cualquier nivel)
+model CategoryImage {
+  id         String     @id @default(cuid())
+  mediaId    String
+  media      MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+
+  @@unique([mediaId, categoryId])
+  @@index([categoryId])
+  @@map("category_image")
 }
 
 // ---------- Better Auth ----------
