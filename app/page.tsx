@@ -64,15 +64,15 @@ export default async function Home() {
         {/* Hero */}
         <div className="rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8 lg:p-10">
           <div className="flex flex-col items-center gap-5 text-center">
-            <span className="relative h-28 w-28 overflow-hidden rounded-full bg-slate-900 sm:h-32 sm:w-32">
+            <span className="relative h-32 w-32 sm:h-40 sm:w-40">
               <Image
                 fill
                 priority
                 unoptimized={logoUnoptimized}
                 src={logoSrc}
                 alt={`Logotipo de ${profile.name}`}
-                sizes="128px"
-                className="object-contain p-1.5"
+                sizes="160px"
+                className="object-contain"
               />
             </span>
             <div className="space-y-3">
