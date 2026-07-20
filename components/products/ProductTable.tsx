@@ -5,6 +5,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { formatCurrency } from '@/src/utils'
 import { getStockStatus } from '@/src/lib/inventory'
 import { deleteProducts } from '@/actions/delete-products-action'
+import { toggleProductActive } from '@/actions/toggle-product-active-action'
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -45,6 +46,22 @@ const ProductTable = ({ products }: ProductTableProps) => {
 
     const toggleAll = () => {
         setSelected((prev) => (prev.size === allIds.length ? new Set() : new Set(allIds)))
+    }
+
+    const [togglingId, setTogglingId] = useState<string | null>(null)
+
+    const handleToggle = (id: string, current: boolean) => {
+        setTogglingId(id)
+        startTransition(async () => {
+            const response = await toggleProductActive(id, !current)
+            if (response?.errors) {
+                response.errors.forEach((e) => toast.error(e.message))
+            } else {
+                toast.success(!current ? 'Producto activado' : 'Producto desactivado')
+                router.refresh()
+            }
+            setTogglingId(null)
+        })
     }
 
     const handleDelete = () => {
@@ -114,7 +131,7 @@ const ProductTable = ({ products }: ProductTableProps) => {
                     return (
                         <li
                             key={product.id}
-                            className={`rounded-2xl border p-4 ${isChecked ? 'border-amber-400 bg-amber-50/40' : 'border-slate-200 bg-white'}`}
+                            className={`rounded-2xl border p-4 ${isChecked ? 'border-amber-400 bg-amber-50/40' : 'border-slate-200 bg-white'} ${product.active ? '' : 'opacity-70'}`}
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <label className="flex items-start gap-2">
@@ -138,13 +155,28 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stockBadgeClass[status]}`}>
                                     {stockLabel(product.stock, status)}
                                 </span>
+                                <span
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${product.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}
+                                >
+                                    {product.active ? 'Activo' : 'Inactivo'}
+                                </span>
                             </div>
-                            <Link
-                                href={`/admin/products/${product.id}/edit`}
-                                className="mt-4 flex w-full items-center justify-center rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                            >
-                                Editar <span className="sr-only">{product.name}</span>
-                            </Link>
+                            <div className="mt-4 flex items-center gap-2">
+                                <Link
+                                    href={`/admin/products/${product.id}/edit`}
+                                    className="flex flex-1 items-center justify-center rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                >
+                                    Editar <span className="sr-only">{product.name}</span>
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggle(product.id, product.active)}
+                                    disabled={togglingId === product.id}
+                                    className={`flex flex-1 items-center justify-center rounded-full px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${product.active ? 'border border-slate-300 bg-white text-slate-700 hover:border-slate-900' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}
+                                >
+                                    {togglingId === product.id ? '...' : product.active ? 'Desactivar' : 'Activar'}
+                                </button>
+                            </div>
                         </li>
                     )
                 })}
@@ -178,6 +210,9 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                     <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                                         Inventario
                                     </th>
+                                    <th scope="col" className="px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                        Estado
+                                    </th>
                                     <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
                                         <span className="sr-only">Acciones</span>
                                     </th>
@@ -189,7 +224,7 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                     return (
                                         <tr
                                             key={product.id}
-                                            className={`transition-colors ${isChecked ? 'bg-amber-50/60' : 'hover:bg-amber-50/40'}`}
+                                            className={`transition-colors ${isChecked ? 'bg-amber-50/60' : 'hover:bg-amber-50/40'} ${product.active ? '' : 'opacity-60'}`}
                                         >
                                             <td className="py-4 pl-4 pr-3 sm:pl-2">
                                                 <input
@@ -223,13 +258,30 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                                     )
                                                 })()}
                                             </td>
-                                            <td className="relative whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500 sm:pr-0">
-                                                <Link
-                                                    href={`/admin/products/${product.id}/edit`}
-                                                    className="inline-flex rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:text-sm"
+                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">
+                                                <span
+                                                    className={`rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${product.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}
                                                 >
-                                                    Editar <span className="sr-only">{product.name}</span>
-                                                </Link>
+                                                    {product.active ? 'Activo' : 'Inactivo'}
+                                                </span>
+                                            </td>
+                                            <td className="relative whitespace-nowrap px-3 py-4 text-right text-sm text-gray-500 sm:pr-0">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggle(product.id, product.active)}
+                                                        disabled={togglingId === product.id}
+                                                        className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm ${product.active ? 'border border-slate-300 bg-white text-slate-700 hover:border-slate-900 hover:text-slate-900' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}
+                                                    >
+                                                        {togglingId === product.id ? '...' : product.active ? 'Desactivar' : 'Activar'}
+                                                    </button>
+                                                    <Link
+                                                        href={`/admin/products/${product.id}/edit`}
+                                                        className="inline-flex rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:text-sm"
+                                                    >
+                                                        Editar <span className="sr-only">{product.name}</span>
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
                                     )

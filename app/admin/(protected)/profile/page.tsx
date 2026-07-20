@@ -1,6 +1,7 @@
 import Heading from "@/components/ui/Heading"
 import ProfileForm from "@/components/profile/ProfileForm"
 import BankAccountManager from "@/components/profile/BankAccountManager"
+import InstructionsEditor from "@/components/profile/InstructionsEditor"
 import { getBusinessProfile } from "@/src/lib/business-profile"
 import { getBankAccounts } from "@/src/lib/bank-accounts"
 
@@ -24,6 +25,16 @@ const ProfilePage = async () => {
             </section>
 
             <ProfileForm profile={profile} />
+
+            <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Sitio publico</p>
+                <Heading>Instrucciones del pedido</Heading>
+                <p className="-mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+                    Estos pasos aparecen en la cinta animada del inicio y del catalogo. Puedes editarlos, reordenarlos, agregar o quitar pasos.
+                </p>
+            </section>
+
+            <InstructionsEditor steps={profile.instructionSteps} />
 
             <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pagos</p>

@@ -1,13 +1,12 @@
-const steps = [
-    "Selecciona los productos",
-    "Elige el tipo de retiro",
-    "Realiza tu pago por transferencia bancaria",
-    "Sube una foto clara de tu comprobante de pago en el carrito",
-    "Completa los datos de tu Orden",
-    "Confirma tu pedido y listo!",
-]
+import { getBusinessProfile } from "@/src/lib/business-profile"
 
-const InstructionsMarquee = () => {
+const InstructionsMarquee = async () => {
+    const { instructionSteps } = await getBusinessProfile()
+    const steps = instructionSteps.filter((s) => s.trim().length > 0)
+
+    // Si no hay pasos configurados, no renderizamos la cinta
+    if (steps.length === 0) return null
+
     // Duplicamos la lista para lograr un bucle continuo sin cortes
     const loop = [...steps, ...steps]
 

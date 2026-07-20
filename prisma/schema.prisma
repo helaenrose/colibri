@@ -37,6 +37,7 @@ model Product {
   price         Float
   image         String
   stock         Int             @default(0)
+  active        Boolean         @default(true)
   categoryId    String
   category      Category        @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
@@ -74,15 +75,16 @@ model OrderProducts {
 }
 
 model BusinessProfile {
-  id              String   @id @default(cuid())
-  name            String
-  image           String?
-  tagline         String?
-  phone           String?
-  email           String?
-  address         String?
+  id               String   @id @default(cuid())
+  name             String
+  image            String?
+  tagline          String?
+  phone            String?
+  email            String?
+  address          String?
   googleReviewsUrl String?
-  updatedAt       DateTime @updatedAt @default(now())
+  instructionSteps String[]
+  updatedAt        DateTime @updatedAt @default(now())
 
   @@map("business_profile")
 }

@@ -28,6 +28,7 @@ const searchProducts = async (query: string, catSlug: string): Promise<SearchRes
         const products = await prisma.product.findMany({
             where: {
                 stock: { gt: 0 },
+                active: true,
                 ...categoryFilter,
                 AND: terms.map((term) => ({
                     name: { contains: term, mode: "insensitive" as const },

@@ -15,6 +15,7 @@ const getTree = async (): Promise<CategoryNode[]> => {
         // Ids de categorias que tienen al menos un producto asociado directamente
         const grouped = await prisma.product.groupBy({
             by: ["categoryId"],
+            where: { active: true, stock: { gt: 0 } },
             _count: { _all: true },
         });
         const withProducts = new Set(grouped.map((g) => g.categoryId));
