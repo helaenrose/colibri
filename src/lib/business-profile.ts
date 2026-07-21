@@ -16,6 +16,7 @@ export type BusinessProfileData = {
     id: string | null
     name: string
     image: string | null
+    favicon: string | null
     tagline: string | null
     phone: string | null
     email: string | null
@@ -28,6 +29,7 @@ export const defaultBusinessProfile: BusinessProfileData = {
     id: null,
     name: "Mi Tienda de Abarrotes",
     image: null,
+    favicon: null,
     tagline: defaultTagline,
     phone: "+52 000 000 0000",
     email: "contacto@mitienda.com",
@@ -47,6 +49,7 @@ export const getBusinessProfile = async (): Promise<BusinessProfileData> => {
             id: profile.id,
             name: profile.name,
             image: profile.image,
+            favicon: profile.favicon,
             tagline: profile.tagline ?? defaultTagline,
             phone: profile.phone,
             email: profile.email,
@@ -64,3 +67,12 @@ export const getBusinessProfile = async (): Promise<BusinessProfileData> => {
 
 export const getBusinessLogo = (image: string | null | undefined) =>
     image && (image.startsWith('http') || image.startsWith('/')) ? image : '/logo.png'
+
+// El favicon usa su propia imagen si se subio; si no, cae al logo del negocio.
+export const getBusinessFavicon = (
+    favicon: string | null | undefined,
+    image: string | null | undefined,
+) =>
+    favicon && (favicon.startsWith('http') || favicon.startsWith('/'))
+        ? favicon
+        : getBusinessLogo(image)

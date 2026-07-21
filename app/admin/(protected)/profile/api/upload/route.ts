@@ -5,7 +5,15 @@ import { isAdminAuthenticated } from "@/src/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+  "image/x-icon": "ico",
+  "image/vnd.microsoft.icon": "ico",
+}
+
 const MAX_BYTES = 4 * 1024 * 1024 // 4MB
 
 export const POST = async (request: NextRequest) => {
@@ -15,13 +23,19 @@ export const POST = async (request: NextRequest) => {
 
   const formData = await request.formData()
   const file = formData.get("file")
+  // "logo" (por defecto) o "favicon": solo cambia el prefijo del nombre del archivo.
+  const kind = formData.get("kind") === "favicon" ? "favicon" : "logo"
 
   if (!(file instanceof File)) {
     return Response.json({ ok: false, error: "No se recibio ningun archivo." }, { status: 400 })
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return Response.json({ ok: false, error: "Formato no valido. Usa JPG, PNG o WEBP." }, { status: 400 })
+  const ext = EXT_BY_TYPE[file.type]
+  if (!ext) {
+    return Response.json(
+      { ok: false, error: "Formato no valido. Usa JPG, PNG, WEBP, SVG o ICO." },
+      { status: 400 },
+    )
   }
 
   if (file.size > MAX_BYTES) {
@@ -29,8 +43,7 @@ export const POST = async (request: NextRequest) => {
   }
 
   const bytes = Buffer.from(await file.arrayBuffer())
-  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg"
-  const fileName = `logo_${Date.now()}.${ext}`
+  const fileName = `${kind}_${Date.now()}.${ext}`
 
   const uploadDir = path.join(process.cwd(), "public", "uploads")
   await mkdir(uploadDir, { recursive: true })

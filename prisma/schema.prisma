@@ -79,6 +79,7 @@ model BusinessProfile {
   id               String   @id @default(cuid())
   name             String
   image            String?
+  favicon          String?
   tagline          String?
   phone            String?
   email            String?

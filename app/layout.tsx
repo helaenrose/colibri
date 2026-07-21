@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import TopNavbar from "@/components/ui/TopNavbar";
-import { getBusinessProfile, getBusinessLogo } from "@/src/lib/business-profile";
+import SiteFooter from "@/components/ui/SiteFooter";
+import { getBusinessProfile, getBusinessLogo, getBusinessFavicon } from "@/src/lib/business-profile";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -24,6 +25,8 @@ export async function generateMetadata(): Promise<Metadata> {
   // Logo cargado en el administrador (o el de respaldo). getBusinessLogo puede
   // devolver una ruta relativa; metadataBase la convierte en absoluta para OG.
   const logo = getBusinessLogo(profile.image);
+  // El favicon usa su propia imagen si se subio; si no, cae al logo.
+  const favicon = getBusinessFavicon(profile.favicon, profile.image);
   const title = `${profile.name} | Tienda en linea`;
   const description = `Catalogo en linea de ${profile.name} con pedido rapido y retiro en tienda.`;
 
@@ -35,8 +38,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: `Compra en linea en ${profile.name}. Abarrotes, bebidas y productos de limpieza con pedido rapido.`,
     icons: {
-      icon: logo,
-      apple: logo,
+      icon: favicon,
+      apple: favicon,
     },
     openGraph: {
       title,
@@ -69,9 +72,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${manrope.variable} ${manrope.className} bg-gray-100`}>
+      <body className={`${manrope.variable} ${manrope.className} flex min-h-screen flex-col bg-gray-100`}>
         <TopNavbar />
-        {children}
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   );
