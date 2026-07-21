@@ -138,6 +138,24 @@ const ProductForm = async ({ product }: ProductFormProps) => {
                 </select>
                 <p className="text-xs text-slate-500">Puedes asignar el producto a un Departamento, Categoria o Subcategoria.</p>
             </div>
+
+            <div className="space-y-2">
+                <label
+                    className="text-slate-800"
+                    htmlFor="supplier"
+                >Proveedor (opcional):</label>
+                <input
+                    id="supplier"
+                    type="text"
+                    name="supplier"
+                    maxLength={120}
+                    className="block w-full p-3 bg-slate-100 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Nombre del proveedor"
+                    defaultValue={product?.supplier ?? ''}
+                />
+                <p className="text-xs text-slate-500">Uso interno: te ayuda a saber a quien le compras este producto.</p>
+            </div>
+
             <ImageUpload
                 image={product?.image}
             />

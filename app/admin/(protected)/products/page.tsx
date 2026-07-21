@@ -2,13 +2,14 @@ import ProductPagination from "@/components/products/ProductPagination"
 import ProductFilters, { type FilterCategoryOption } from "@/components/products/ProductFilters"
 import ProductTable from "@/components/products/ProductTable"
 import ProductCsvImport from "@/components/products/ProductCsvImport"
+import CreateProductModal from "@/components/products/CreateProductModal"
+import ProductForm from "@/components/products/ProductForm"
 import Heading from "@/components/ui/Heading"
 import EmptyState from "@/components/ui/EmptyState"
 import { prisma } from "@/src/lib/prisma"
 import { getDemoProducts } from "@/src/demo/demo-store"
 import { LOW_STOCK_THRESHOLD, getStockStatus } from "@/src/lib/inventory"
 import type { Prisma } from "@prisma/client"
-import Link from "next/link"
 import { redirect } from 'next/navigation'
 
 type Filters = {
@@ -154,11 +155,9 @@ const ProductsPage = async ({
             </section>
 
             <div className="flex flex-col lg:flex-row lg:justify-between gap-5">
-                <Link
-                    className="w-full rounded-2xl bg-slate-900 px-6 py-3 text-center font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 lg:w-auto"
-                    href="/admin/products/new">
-                    Agregar producto
-                </Link>
+                <CreateProductModal>
+                    <ProductForm />
+                </CreateProductModal>
             </div>
 
             <ProductFilters categories={categories} />

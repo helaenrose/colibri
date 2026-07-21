@@ -142,7 +142,14 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                         className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-amber-400"
                                         aria-label={`Seleccionar ${product.name}`}
                                     />
-                                    <span className="font-semibold text-slate-900">{product.name}</span>
+                                    <span className="font-semibold text-slate-900">
+                                        {product.name}
+                                        {product.supplier ? (
+                                            <span className="mt-0.5 block text-xs font-normal text-slate-500">
+                                                Proveedor: {product.supplier}
+                                            </span>
+                                        ) : null}
+                                    </span>
                                 </label>
                                 <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                                     {formatCurrency(product.price)}
@@ -237,6 +244,11 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                             </td>
                                             <td className="py-4 pl-2 pr-3 text-sm font-medium text-gray-900">
                                                 <p className="font-semibold text-slate-900">{product.name}</p>
+                                                {product.supplier ? (
+                                                    <p className="mt-0.5 text-xs font-normal text-slate-500">
+                                                        Proveedor: {product.supplier}
+                                                    </p>
+                                                ) : null}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">
                                                 <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 sm:text-sm">

@@ -2,6 +2,7 @@ import Heading from "@/components/ui/Heading"
 import ProfileForm from "@/components/profile/ProfileForm"
 import BankAccountManager from "@/components/profile/BankAccountManager"
 import InstructionsEditor from "@/components/profile/InstructionsEditor"
+import ChangePasswordForm from "@/components/profile/ChangePasswordForm"
 import { getBusinessProfile } from "@/src/lib/business-profile"
 import { getBankAccounts } from "@/src/lib/bank-accounts"
 
@@ -45,6 +46,16 @@ const ProfilePage = async () => {
             </section>
 
             <BankAccountManager accounts={bankAccounts} />
+
+            <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Seguridad</p>
+                <Heading>Cambiar contrasena</Heading>
+                <p className="-mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+                    Actualiza la contrasena de tu cuenta de administrador. Se cerraran las demas sesiones activas por seguridad.
+                </p>
+            </section>
+
+            <ChangePasswordForm />
         </div>
     )
 }

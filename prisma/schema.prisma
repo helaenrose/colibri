@@ -38,6 +38,7 @@ model Product {
   image         String
   stock         Int             @default(0)
   active        Boolean         @default(true)
+  supplier      String?
   categoryId    String
   category      Category        @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
