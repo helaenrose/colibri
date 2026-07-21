@@ -207,7 +207,7 @@ export const getDemoPendingOrders = () => state.pendingOrders
 
 export const getDemoReadyOrders = () => state.readyOrders
 
-export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string }) => {
+export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string | null }) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
 
@@ -225,7 +225,7 @@ export const createDemoProduct = (data: { name: string; price: number; stock: nu
 
 export const updateDemoProduct = (
   id: string,
-  data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string },
+  data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string | null },
 ) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null

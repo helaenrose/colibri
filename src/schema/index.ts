@@ -49,7 +49,11 @@ export const ProductSchema = z.object({
         .trim()
         .min(1, { message: 'La categoría es obligatoria' }),
     image: z.string().min(1, "La imagen es obligatoria"),
-    supplier: z.string().trim().max(120, { message: 'El proveedor es demasiado largo (max 120 caracteres)' }).optional().or(z.literal('')),
+    supplier: z.string()
+        .trim()
+        .max(120, { message: 'El proveedor es demasiado largo (max 120 caracteres)' })
+        .optional()
+        .transform((value) => (value ? value : null)),
 })
 
 export const CategoryLevelEnum = z.enum(['DEPARTMENT', 'CATEGORY', 'SUBCATEGORY'])
