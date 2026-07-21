@@ -39,10 +39,11 @@ const Modal = ({ open, onClose, title, description, children }: ModalProps) => {
             onClick={onClose}
         >
             <div
-                className="relative my-8 w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.25)] sm:p-6"
+                className="relative my-8 flex max-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
                 onClick={(event) => event.stopPropagation()}
             >
-                <div className="flex items-start justify-between gap-4">
+                {/* Encabezado fijo */}
+                <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
                     <div>
                         <h2 className="text-lg font-bold text-slate-900">{title}</h2>
                         {description ? (
@@ -59,7 +60,8 @@ const Modal = ({ open, onClose, title, description, children }: ModalProps) => {
                     </button>
                 </div>
 
-                <div className="mt-4">{children}</div>
+                {/* Cuerpo con scroll interno */}
+                <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">{children}</div>
             </div>
         </div>
     )
