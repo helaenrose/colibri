@@ -15,6 +15,7 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
     const { showIssues } = useToastZodErrors()
     const [isPending, startTransition] = useTransition()
     const [image, setImage] = useState(profile.image ?? '')
+    const [favicon, setFavicon] = useState(profile.favicon ?? '')
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -28,6 +29,7 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
             address: formData.get('address'),
             googleReviewsUrl: formData.get('googleReviewsUrl'),
             image,
+            favicon,
         }
 
         const result = BusinessProfileSchema.safeParse(data)
@@ -142,11 +144,27 @@ const ProfileForm = ({ profile }: { profile: BusinessProfileData }) => {
                 </button>
             </div>
 
-            <div className="h-fit rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-6">
-                <ProfileImageUpload image={profile.image} onChange={setImage} />
-                <p className="mt-3 text-xs text-slate-500">
-                    Esta imagen se usara como logo del negocio en el catalogo y el panel.
-                </p>
+            <div className="h-fit space-y-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-6">
+                <div>
+                    <ProfileImageUpload image={profile.image} onChange={setImage} label="Logo del negocio" />
+                    <p className="mt-3 text-xs text-slate-500">
+                        Esta imagen se usara como logo del negocio en el catalogo y el panel.
+                    </p>
+                </div>
+
+                <div className="border-t border-slate-200 pt-6">
+                    <ProfileImageUpload
+                        image={profile.favicon}
+                        onChange={setFavicon}
+                        label="Favicon (icono de la pestana)"
+                        kind="favicon"
+                        accept="image/png,image/x-icon,image/svg+xml,image/webp"
+                        hint="PNG, ICO, SVG o WEBP (max 4MB)"
+                    />
+                    <p className="mt-3 text-xs text-slate-500">
+                        Icono que aparece en la pestana del navegador. Idealmente cuadrado (por ejemplo 512x512). Si no subes uno, se usa el logo.
+                    </p>
+                </div>
             </div>
         </form>
     )

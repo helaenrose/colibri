@@ -48,7 +48,12 @@ export const ProductSchema = z.object({
     categoryId: z.string()
         .trim()
         .min(1, { message: 'La categoría es obligatoria' }),
-    image: z.string().min(1, "La imagen es obligatoria")
+    image: z.string().min(1, "La imagen es obligatoria"),
+    supplier: z.string()
+        .trim()
+        .max(120, { message: 'El proveedor es demasiado largo (max 120 caracteres)' })
+        .optional()
+        .transform((value) => (value ? value : null)),
 })
 
 export const CategoryLevelEnum = z.enum(['DEPARTMENT', 'CATEGORY', 'SUBCATEGORY'])
@@ -108,5 +113,6 @@ export const BusinessProfileSchema = z.object({
     email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal('')),
     address: z.string().trim().optional().or(z.literal('')),
     image: z.string().trim().optional().or(z.literal('')),
+    favicon: z.string().trim().optional().or(z.literal('')),
     googleReviewsUrl: z.string().trim().url({ message: 'La URL de resenas no es valida' }).optional().or(z.literal(''))
 })

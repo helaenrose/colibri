@@ -21,7 +21,8 @@ const AddProductForm = ({ children }: { children: React.ReactNode }) => {
             price: formData.get('price'),
             stock: formData.get('stock'),
             categoryId: formData.get('categoryId'),
-            image: formData.get('image')
+            image: formData.get('image'),
+            supplier: formData.get('supplier')
         }
 
         const result = ProductSchema.safeParse(data)

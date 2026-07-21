@@ -10,6 +10,7 @@ type DemoProduct = {
   image: string
   stock: number
   active: boolean
+  supplier: string | null
   categoryId: string
   category: DemoCategory
 }
@@ -60,6 +61,7 @@ const initialDemoProducts: DemoProduct[] = seedProducts.map((product, index) => 
   image: product.image,
   stock: product.stock ?? 0,
   active: true,
+  supplier: null,
   categoryId: product.categoryId,
   category: categoryById.get(product.categoryId)!,
 }))
@@ -205,13 +207,14 @@ export const getDemoPendingOrders = () => state.pendingOrders
 
 export const getDemoReadyOrders = () => state.readyOrders
 
-export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string }) => {
+export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string | null }) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
 
   const product = {
     id: createId('demo-product'),
     ...data,
+    supplier: data.supplier || null,
     active: true,
     category,
   }
@@ -222,7 +225,7 @@ export const createDemoProduct = (data: { name: string; price: number; stock: nu
 
 export const updateDemoProduct = (
   id: string,
-  data: { name: string; price: number; stock: number; categoryId: string; image: string },
+  data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string | null },
 ) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
   if (!category) return null
@@ -232,6 +235,7 @@ export const updateDemoProduct = (
   const updatedProduct = {
     id,
     ...data,
+    supplier: data.supplier || null,
     active: existing?.active ?? true,
     category,
   }

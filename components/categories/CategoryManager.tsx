@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 import Image from "next/image"
 import ProfileImageUpload from "@/components/profile/ProfileImageUpload"
+import Modal from "@/components/ui/Modal"
 import type { AdminCategoryItem } from "@/app/admin/(protected)/categories/page"
 
 type Level = 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
@@ -29,6 +30,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
 
     const router = useRouter()
     const { showIssues } = useToastZodErrors()
+    const [isModalOpen, setIsModalOpen] = useState(false)
     const [name, setName] = useState('')
     const [level, setLevel] = useState<Level>('DEPARTMENT')
     const [parentId, setParentId] = useState('')
@@ -88,6 +90,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
             setCode('')
             setImage('')
             setUploadKey((k) => k + 1)
+            setIsModalOpen(false)
             router.refresh()
         })
     }
@@ -164,18 +167,28 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
     const roots = tree.get(null) ?? []
 
     return (
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <form
-                onSubmit={handleSubmit}
-                noValidate
-                className="h-fit rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-6"
-            >
-                <h2 className="text-lg font-bold text-slate-900">Nuevo elemento</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                    Agrega un Departamento, Categoria o Subcategoria manualmente.
+        <div className="space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-600">
+                    Crea un Departamento, Categoria o Subcategoria, o revisa la jerarquia actual.
                 </p>
+                <button
+                    type="button"
+                    onClick={() => setIsModalOpen(true)}
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
+                >
+                    Crear categoria
+                </button>
+            </div>
 
-                <div className="mt-4 space-y-2">
+            <Modal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Nuevo elemento"
+                description="Agrega un Departamento, Categoria o Subcategoria manualmente."
+            >
+                <form onSubmit={handleSubmit} noValidate>
+                <div className="mt-1 space-y-2">
                     <label htmlFor="category-level" className="text-sm font-semibold text-slate-800">
                         Nivel
                     </label>
@@ -260,7 +273,8 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                 >
                     {isPending ? 'Guardando...' : `Crear ${levelLabels[level].toLowerCase()}`}
                 </button>
-            </form>
+                </form>
+            </Modal>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] sm:p-6">
                 <h2 className="text-lg font-bold text-slate-900">Jerarquia actual</h2>

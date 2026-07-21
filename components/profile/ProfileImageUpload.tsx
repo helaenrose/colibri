@@ -9,12 +9,22 @@ interface ProfileImageUploadProps {
     image?: string | null
     onChange: (url: string) => void
     label?: string
+    kind?: 'logo' | 'favicon'
+    accept?: string
+    hint?: string
 }
 
 const isRenderableSrc = (value: string) =>
     value.startsWith('/') || value.startsWith('http')
 
-const ProfileImageUpload = ({ image, onChange, label = 'Imagen del negocio' }: ProfileImageUploadProps) => {
+const ProfileImageUpload = ({
+    image,
+    onChange,
+    label = 'Imagen del negocio',
+    kind = 'logo',
+    accept = 'image/png,image/jpeg,image/webp',
+    hint = 'JPG, PNG o WEBP (max 4MB)',
+}: ProfileImageUploadProps) => {
     const inputRef = useRef<HTMLInputElement>(null)
     const [currentImage, setCurrentImage] = useState(image ?? '')
     const [uploading, setUploading] = useState(false)
@@ -24,6 +34,7 @@ const ProfileImageUpload = ({ image, onChange, label = 'Imagen del negocio' }: P
         try {
             const formData = new FormData()
             formData.append('file', file)
+            formData.append('kind', kind)
 
             const response = await fetch('/admin/profile/api/upload', {
                 method: 'POST',
@@ -53,7 +64,7 @@ const ProfileImageUpload = ({ image, onChange, label = 'Imagen del negocio' }: P
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept={accept}
                 className="sr-only"
                 onChange={(event) => {
                     const file = event.target.files?.[0]
@@ -86,7 +97,7 @@ const ProfileImageUpload = ({ image, onChange, label = 'Imagen del negocio' }: P
                     <>
                         <TbPhotoPlus size={46} />
                         <p className="text-base font-semibold">Subir desde tu equipo</p>
-                        <p className="text-xs text-neutral-500">JPG, PNG o WEBP (max 4MB)</p>
+                        <p className="text-xs text-neutral-500">{hint}</p>
                     </>
                 )}
             </button>

@@ -23,6 +23,7 @@ export const updateBusinessProfile = async (data: unknown) => {
         email: result.data.email || null,
         address: result.data.address || null,
         image: result.data.image || null,
+        favicon: result.data.favicon || null,
         googleReviewsUrl: result.data.googleReviewsUrl || null,
     }
 
