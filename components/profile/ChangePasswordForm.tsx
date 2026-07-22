@@ -11,6 +11,9 @@ const ChangePasswordForm = () => {
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    // true = cerrar las demas sesiones activas (tendran que reingresar con la
+    // nueva contrasena). false = mantener las demas sesiones abiertas.
+    const [revokeOtherSessions, setRevokeOtherSessions] = useState(true)
     const [loading, setLoading] = useState(false)
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -33,7 +36,7 @@ const ChangePasswordForm = () => {
         const { error } = await authClient.changePassword({
             currentPassword,
             newPassword,
-            revokeOtherSessions: true,
+            revokeOtherSessions,
         })
         setLoading(false)
 
@@ -47,7 +50,11 @@ const ChangePasswordForm = () => {
             return
         }
 
-        toast.success('Contrasena actualizada correctamente.')
+        toast.success(
+            revokeOtherSessions
+                ? 'Contrasena actualizada. Se cerraron las demas sesiones activas.'
+                : 'Contrasena actualizada. Las demas sesiones siguen abiertas.',
+        )
         setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
@@ -113,6 +120,23 @@ const ChangePasswordForm = () => {
                     />
                 </div>
             </div>
+
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <input
+                    type="checkbox"
+                    checked={revokeOtherSessions}
+                    onChange={(event) => setRevokeOtherSessions(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-slate-900"
+                />
+                <span className="text-sm text-slate-700">
+                    <span className="font-semibold text-slate-900">Cerrar las demas sesiones activas</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                        {revokeOtherSessions
+                            ? 'Se cerrara la sesion en los demas dispositivos y tendran que ingresar con la nueva contrasena.'
+                            : 'Las sesiones abiertas en otros dispositivos seguiran activas con esta cuenta.'}
+                    </span>
+                </span>
+            </label>
 
             <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 Esto cambia solo la contrasena de tu cuenta de administrador. La contrasena maestra de

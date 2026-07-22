@@ -17,7 +17,14 @@ export const proxy = (request: NextRequest) => {
   const isAuthenticated = Boolean(sessionCookie) || Boolean(emergencyCookie)
 
   if (request.nextUrl.pathname.startsWith(ADMIN_LOGIN_PATH)) {
-    if (isAuthenticated) {
+    // Si el layout detecto una sesion invalida (p. ej. la contrasena cambio en
+    // otro dispositivo y esta sesion fue revocada), llega con ?expired=1. En ese
+    // caso NO redirigimos al panel aunque la cookie siga presente en el navegador:
+    // asi evitamos el bucle "login -> panel -> login" (too many redirects) y
+    // dejamos que la pantalla de login se muestre para volver a ingresar.
+    const isExpired = request.nextUrl.searchParams.get('expired') === '1'
+
+    if (isAuthenticated && !isExpired) {
       return NextResponse.redirect(new URL(ADMIN_DEFAULT_PATH, request.url))
     }
     return NextResponse.next()
