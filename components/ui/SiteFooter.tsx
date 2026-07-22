@@ -7,7 +7,7 @@ const SiteFooter = () => {
                     href="https://wa.me/593978776425"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-semibold text-slate-700 underline-offset-2 transition-colors hover:text-amber-600 hover:underline"
+                    className="inline-block font-semibold text-slate-700 underline-offset-2 transition-all hover:text-amber-600 hover:underline hover:text-sm"
                 >
                     Osiris Roman
                 </a>
