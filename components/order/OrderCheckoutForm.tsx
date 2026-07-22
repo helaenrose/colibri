@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import Image from "next/image"
 import { toast } from "react-toastify"
 import { mutate } from "swr"
+import { Turnstile } from "@marsidev/react-turnstile"
 import { useStore } from "@/src/store/store"
 import { notifyOrderUpdate } from "@/src/hooks/useOrderChannelSync"
 import { compressImage } from "@/src/lib/compress-image"
@@ -28,6 +29,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
 
     const [isUploading, setIsUploading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const uploadReceipt = async (file: File) => {
@@ -97,6 +99,11 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             return
         }
 
+        if (!turnstileToken) {
+            toast.error("Completa la verificacion de seguridad para continuar")
+            return
+        }
+
         const data = {
             name,
             phone,
@@ -106,6 +113,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             receiptUrl: customer.receiptUrl,
             receiptId: customer.receiptId,
             total,
+            turnstileToken,
             order: order.map((item: OrderItem) => ({
                 id: item.id,
                 name: item.name,
@@ -151,6 +159,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
         // Limpia el carrito y los datos del cliente guardados en localStorage.
         cleanOrder()
         if (fileInputRef.current) fileInputRef.current.value = ""
+        setTurnstileToken(null)
         setIsSubmitting(false)
         onSuccess()
     }
@@ -282,9 +291,28 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
                 Solo se despachara despues de que el pago se haga efectivo, por favor tomar esto en cuenta sobre todo en transferencias interbancarias.
             </div>
 
+            {/* Widget de verificacion anti-bots de Cloudflare Turnstile */}
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+                <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                    onSuccess={setTurnstileToken}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => {
+                        setTurnstileToken(null)
+                        toast.error("Error en la verificacion de seguridad. Recarga la pagina.")
+                    }}
+                    options={{ theme: "light", size: "flexible" }}
+                    className="w-full overflow-hidden rounded-md"
+                />
+            ) : null}
+
             <button
                 type="submit"
-                disabled={isSubmitting || isUploading}
+                disabled={
+                    isSubmitting ||
+                    isUploading ||
+                    (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)
+                }
                 className="w-full cursor-pointer rounded-md bg-gray-800 py-2.5 text-center text-sm font-semibold uppercase text-white transition-all hover:bg-gray-950 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {isSubmitting ? "Enviando..." : "Confirmar pedido"}
