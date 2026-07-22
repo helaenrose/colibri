@@ -3,8 +3,32 @@ import { OrderSchema } from "@/src/schema"
 import { createDemoOrder } from "@/src/demo/demo-store"
 import { withTimeout } from "@/src/lib/with-timeout"
 import { isDemoFallbackEnabled } from "@/src/lib/demo-fallback"
+import { Redis } from "@upstash/redis"
+import { Ratelimit } from "@upstash/ratelimit"
 
 export const dynamic = 'force-dynamic'
+
+// Rate limiter: max 15 pedidos por IP cada 15 minutos.
+// Se crea de forma lazy para no fallar en entornos sin las variables configuradas.
+const getRateLimiter = (() => {
+  let limiter: Ratelimit | null = null
+  return () => {
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      return null
+    }
+    if (!limiter) {
+      limiter = new Ratelimit({
+        redis: new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        }),
+        limiter: Ratelimit.slidingWindow(15, '15 m'),
+        prefix: 'rl:order',
+      })
+    }
+    return limiter
+  }
+})()
 
 // Verifica el token de Cloudflare Turnstile contra la API de Cloudflare.
 // Devuelve true si el token es valido, false en caso contrario.
@@ -29,6 +53,34 @@ const verifyTurnstile = async (token: string, ip: string): Promise<boolean> => {
 }
 
 export const POST = async (request: Request) => {
+  // Extraer IP del cliente (Cloudflare -> proxy -> fallback)
+  const clientIp =
+    request.headers.get('CF-Connecting-IP') ??
+    request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ??
+    '0.0.0.0'
+
+  // Rate limiting: max 15 peticiones por IP cada 15 minutos.
+  // Si Upstash no esta configurado se omite silenciosamente.
+  const rateLimiter = getRateLimiter()
+  if (rateLimiter) {
+    const { success, limit, remaining, reset } = await rateLimiter.limit(clientIp)
+    if (!success) {
+      const retryAfterSecs = Math.ceil((reset - Date.now()) / 1000)
+      return Response.json(
+        { success: false, errors: [{ message: 'Demasiadas solicitudes. Intenta de nuevo en unos minutos.' }] },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfterSecs),
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(reset),
+          },
+        },
+      )
+    }
+  }
+
   const payload = await request.json().catch(() => null)
   const result = OrderSchema.safeParse(payload)
 
@@ -45,10 +97,6 @@ export const POST = async (request: Request) => {
         { status: 400 },
       )
     }
-    const clientIp =
-      request.headers.get('CF-Connecting-IP') ??
-      request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ??
-      '0.0.0.0'
     const valid = await verifyTurnstile(turnstileToken, clientIp).catch(() => false)
     if (!valid) {
       return Response.json(
