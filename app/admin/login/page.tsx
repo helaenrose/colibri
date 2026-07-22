@@ -11,6 +11,7 @@ const LoginForm = () => {
   const searchParams = useSearchParams()
   const nextParam = searchParams.get("next")
   const safeNext = nextParam?.startsWith("/admin") ? nextParam : "/admin/products"
+  const sessionExpired = searchParams.get("expired") === "1"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -66,6 +67,12 @@ const LoginForm = () => {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Admin</p>
         <h1 className="mt-2 text-2xl font-black text-slate-950">Ingresar al panel</h1>
         <p className="mt-2 text-sm text-slate-600">Acceso exclusivo para administradores.</p>
+
+        {sessionExpired ? (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            Tu sesion se cerro (es posible que la contrasena se haya cambiado). Vuelve a ingresar con tus credenciales actuales.
+          </p>
+        ) : null}
 
         {error ? (
           <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">

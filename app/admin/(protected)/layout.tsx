@@ -12,7 +12,10 @@ export default async function AdminLayout({
     const authenticated = await isAdminAuthenticated()
 
     if (!authenticated) {
-        redirect('/admin/login')
+        // ?expired=1 evita el bucle de redirecciones cuando el navegador conserva
+        // una cookie de sesion que ya fue revocada (por ejemplo, tras cambiar la
+        // contrasena en otro dispositivo con "cerrar las demas sesiones").
+        redirect('/admin/login?expired=1')
     }
 
     return (
