@@ -40,6 +40,13 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null)
 
     const uploadReceipt = async (file: File) => {
+        // Validar tamaño antes de comprimir y subir (5 MB igual que el servidor).
+        const MAX_SIZE = 5 * 1024 * 1024
+        if (file.size > MAX_SIZE) {
+            toast.error("La imagen supera los 5MB. Elige un archivo mas pequeno.")
+            return
+        }
+
         setIsUploading(true)
         try {
             // Comprimimos en el navegador para no chocar con el limite de subida.
@@ -160,7 +167,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
         }
 
         setIsSubmitting(true)
-        let response: { success?: boolean; errors?: { message: string }[] }
+        let response: { success?: boolean; errors?: { message: string }[]; unavailableIds?: string[] }
         try {
             const request = await fetch("/order/api", {
                 method: "POST",
@@ -173,6 +180,20 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             }
         } catch {
             toast.error("No se pudo crear el pedido")
+            setIsSubmitting(false)
+            return
+        }
+
+        // Si el servidor devuelve IDs no disponibles (segunda linea de defensa),
+        // mostramos el dialogo igual que si lo hubiera detectado el cliente.
+        if (response?.unavailableIds && response.unavailableIds.length > 0) {
+            const names = order
+                .filter((i) => response.unavailableIds!.includes(i.id))
+                .map((i) => i.name)
+            pendingSubmitRef.current = async () => {
+                response.unavailableIds!.forEach((id) => removeItemFromCart(id))
+            }
+            setUnavailableNames(names)
             setIsSubmitting(false)
             return
         }

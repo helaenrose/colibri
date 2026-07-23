@@ -107,6 +107,35 @@ export const POST = async (request: Request) => {
   }
 
   try {
+    // Verificar que todos los productos del pedido siguen existiendo y disponibles.
+    // Un producto eliminado de la BD causaria un error de FK en el create; uno
+    // inactivo o sin stock no deberia procesarse. Esto es la segunda linea de
+    // defensa (la primera es el cliente con validate-cart).
+    const requestedIds = result.data.order.map((p) => String(p.id))
+    const existingProducts = await withTimeout(
+      prisma.product.findMany({
+        where: { id: { in: requestedIds }, active: true, stock: { gt: 0 } },
+        select: { id: true },
+      })
+    )
+    const existingSet = new Set(existingProducts.map((p) => p.id))
+    const unavailableIds = requestedIds.filter((id) => !existingSet.has(id))
+
+    if (unavailableIds.length > 0) {
+      return Response.json(
+        {
+          success: false,
+          unavailableIds,
+          errors: [{
+            message: unavailableIds.length === requestedIds.length
+              ? 'Ninguno de los productos del pedido esta disponible.'
+              : 'Algunos productos del pedido ya no estan disponibles. Actualiza tu carrito e intenta de nuevo.',
+          }],
+        },
+        { status: 400 },
+      )
+    }
+
     await withTimeout(prisma.order.create({
       data: {
         name: result.data.name,
