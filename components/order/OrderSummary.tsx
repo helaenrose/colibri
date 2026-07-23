@@ -2,13 +2,14 @@
 
 import { useStore } from "@/src/store/store"
 import ProductDetails from "./ProductDetails"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { formatCurrency } from "@/src/utils"
 import OrderCheckoutForm from "./OrderCheckoutForm"
 
 const OrderSummary = () => {
 
     const order = useStore(state => state.order)
+    const removeItemFromCart = useStore(state => state.removeItemFromCart)
     const total = useMemo(() => order.reduce((total, item) => total + (item.quantity * item.price), 0), [order])
     const totalItems = useMemo(() => order.reduce((acc, item) => acc + item.quantity, 0), [order])
     const [isOpen, setIsOpen] = useState(false)
@@ -16,13 +17,46 @@ const OrderSummary = () => {
     // El carrito se rehidrata desde localStorage en el cliente. Mostramos el conteo
     // real solo despues de montar para evitar un desajuste de hidratacion con el SSR.
     const [hydrated, setHydrated] = useState(false)
-    useEffect(() => setHydrated(true), [])
+
+    // Purga silenciosamente los productos que ya no están disponibles del carrito.
+    // Se llama en la hidratación inicial y cada vez que el drawer se abre.
+    const purgingRef = useRef(false)
+    const purgeUnavailable = useCallback(async (currentOrder: typeof order) => {
+        if (purgingRef.current || currentOrder.length === 0) return
+        purgingRef.current = true
+        try {
+            const res = await fetch('/order/api/validate-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: currentOrder.map((i) => i.id) }),
+            })
+            if (!res.ok) return
+            const { unavailable } = await res.json() as { unavailable: string[] }
+            unavailable.forEach((id) => removeItemFromCart(id))
+        } catch {
+            // Fallo silencioso: no bloqueamos la experiencia del usuario.
+        } finally {
+            purgingRef.current = false
+        }
+    }, [removeItemFromCart])
+
+    useEffect(() => {
+        setHydrated(true)
+        // Purga al rehidratar (cuando la página carga con un carrito guardado).
+        void purgeUnavailable(order)
+    // Solo al montar — order no debe estar en las deps para no re-ejecutar en cada cambio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <>
             <button
                 type="button"
-                onClick={() => setIsOpen((prev) => !prev)}
+                onClick={() => {
+                    const opening = !isOpen
+                    setIsOpen(opening)
+                    if (opening) void purgeUnavailable(order)
+                }}
                 className="fixed bottom-3 right-3 z-40 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-xl transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:bottom-5 sm:right-4"
                 aria-expanded={isOpen}
                 aria-controls="order-summary-drawer"

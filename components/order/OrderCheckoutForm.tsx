@@ -8,6 +8,7 @@ import { Turnstile } from "@marsidev/react-turnstile"
 import { useStore } from "@/src/store/store"
 import { notifyOrderUpdate } from "@/src/hooks/useOrderChannelSync"
 import { compressImage } from "@/src/lib/compress-image"
+import UnavailableItemsDialog from "./UnavailableItemsDialog"
 
 type OrderItem = {
     id: string
@@ -26,11 +27,17 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const customer = useStore((state) => state.customer)
     const setCustomer = useStore((state) => state.setCustomer)
     const cleanOrder = useStore((state) => state.cleanOrder)
+    const removeItemFromCart = useStore((state) => state.removeItemFromCart)
 
     const [isUploading, setIsUploading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Diálogo de productos no disponibles detectados al momento de confirmar.
+    const [unavailableNames, setUnavailableNames] = useState<string[]>([])
+    // Función guardada para re-ejecutar el submit después de que el usuario confirme.
+    const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null)
 
     const uploadReceipt = async (file: File) => {
         setIsUploading(true)
@@ -97,6 +104,35 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
         if (!customer.receiptUrl || !customer.receiptId) {
             toast.error("Sube el comprobante de pago para continuar")
             return
+        }
+
+        // Verificar disponibilidad de productos antes de enviar.
+        // Si la API no está disponible, continuamos para no bloquear al usuario.
+        try {
+            const validationRes = await fetch('/order/api/validate-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: order.map((i) => i.id) }),
+            })
+            if (validationRes.ok) {
+                const { unavailable } = await validationRes.json() as { unavailable: string[] }
+                if (unavailable.length > 0) {
+                    // Obtener los nombres de los productos no disponibles.
+                    const names = order
+                        .filter((i) => unavailable.includes(i.id))
+                        .map((i) => i.name)
+
+                    // Guardar un callback para que el diálogo pueda reanudar el envío
+                    // después de que el usuario elimine los productos y confirme.
+                    pendingSubmitRef.current = async () => {
+                        unavailable.forEach((id) => removeItemFromCart(id))
+                    }
+                    setUnavailableNames(names)
+                    return
+                }
+            }
+        } catch {
+            // Fallo silencioso: si la validación falla, intentamos enviar igual.
         }
 
         if (!turnstileToken) {
@@ -317,6 +353,21 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             >
                 {isSubmitting ? "Enviando..." : "Confirmar pedido"}
             </button>
+
+            <UnavailableItemsDialog
+                unavailableNames={unavailableNames}
+                onProceed={() => {
+                    if (pendingSubmitRef.current) {
+                        void pendingSubmitRef.current()
+                        pendingSubmitRef.current = null
+                    }
+                    setUnavailableNames([])
+                }}
+                onCancel={() => {
+                    pendingSubmitRef.current = null
+                    setUnavailableNames([])
+                }}
+            />
         </form>
     )
 }
