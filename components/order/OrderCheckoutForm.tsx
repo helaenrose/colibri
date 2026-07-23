@@ -34,50 +34,50 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    // Archivo seleccionado localmente — solo se sube a Cloudinary al confirmar el pedido.
+    const [receiptFile, setReceiptFile] = useState<File | null>(null)
+    // URL local para previsualizar sin subir nada.
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
+
     // Diálogo de productos no disponibles detectados al momento de confirmar.
     const [unavailableNames, setUnavailableNames] = useState<string[]>([])
     // Función guardada para re-ejecutar el submit después de que el usuario confirme.
     const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null)
 
-    const uploadReceipt = async (file: File) => {
-        // Validar tamaño antes de comprimir y subir (5 MB igual que el servidor).
+    // Sube el archivo a Cloudinary y devuelve { url, publicId } o lanza error.
+    const uploadReceiptNow = async (file: File): Promise<{ url: string; publicId: string }> => {
+        const optimized = await compressImage(file)
+        const formData = new FormData()
+        formData.append("file", optimized)
+        const res = await fetch("/order/api/receipt", { method: "POST", body: formData })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error ?? "No se pudo subir el comprobante")
+        return { url: data.url, publicId: data.publicId }
+    }
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
         const MAX_SIZE = 5 * 1024 * 1024
         if (file.size > MAX_SIZE) {
             toast.error("La imagen supera los 5MB. Elige un archivo mas pequeno.")
             return
         }
 
-        setIsUploading(true)
-        try {
-            // Comprimimos en el navegador para no chocar con el limite de subida.
-            const optimized = await compressImage(file)
-            const formData = new FormData()
-            formData.append("file", optimized)
-            const request = await fetch("/order/api/receipt", {
-                method: "POST",
-                body: formData,
-            })
-            const response = await request.json()
-            if (!request.ok) {
-                throw new Error(response?.error ?? "No se pudo subir el comprobante")
-            }
-            setCustomer({ receiptUrl: response.url, receiptId: response.publicId })
-            toast.success("Comprobante cargado")
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "No se pudo subir el comprobante")
-        } finally {
-            setIsUploading(false)
-        }
-    }
+        // Revocar la URL anterior si existia para liberar memoria.
+        if (receiptPreview) URL.revokeObjectURL(receiptPreview)
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (file) {
-            void uploadReceipt(file)
-        }
+        setReceiptFile(file)
+        setReceiptPreview(URL.createObjectURL(file))
+        // Limpiar cualquier URL de Cloudinary previa del estado del cliente.
+        setCustomer({ receiptUrl: "", receiptId: "" })
     }
 
     const removeReceipt = () => {
+        if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+        setReceiptFile(null)
+        setReceiptPreview(null)
         setCustomer({ receiptUrl: "", receiptId: "" })
         if (fileInputRef.current) fileInputRef.current.value = ""
     }
@@ -108,7 +108,7 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             toast.error("Ingresa la direccion de entrega")
             return
         }
-        if (!customer.receiptUrl || !customer.receiptId) {
+        if (!receiptFile && !customer.receiptUrl) {
             toast.error("Sube el comprobante de pago para continuar")
             return
         }
@@ -147,14 +147,37 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             return
         }
 
+        setIsSubmitting(true)
+
+        // Subir el comprobante a Cloudinary solo en este momento.
+        // Si ya fue subido en un intento anterior (receiptUrl presente), lo reutilizamos.
+        let receiptUrl = customer.receiptUrl
+        let receiptId = customer.receiptId
+        if (receiptFile && !receiptUrl) {
+            setIsUploading(true)
+            try {
+                const uploaded = await uploadReceiptNow(receiptFile)
+                receiptUrl = uploaded.url
+                receiptId = uploaded.publicId
+                setCustomer({ receiptUrl, receiptId })
+            } catch (err) {
+                toast.error(err instanceof Error ? err.message : "No se pudo subir el comprobante")
+                setIsUploading(false)
+                setIsSubmitting(false)
+                return
+            } finally {
+                setIsUploading(false)
+            }
+        }
+
         const data = {
             name,
             phone,
             email,
             deliveryType,
             address,
-            receiptUrl: customer.receiptUrl,
-            receiptId: customer.receiptId,
+            receiptUrl,
+            receiptId,
             total,
             turnstileToken,
             order: order.map((item: OrderItem) => ({
@@ -166,7 +189,6 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
             })),
         }
 
-        setIsSubmitting(true)
         let response: { success?: boolean; errors?: { message: string }[]; unavailableIds?: string[] }
         try {
             const request = await fetch("/order/api", {
@@ -216,6 +238,9 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
         // Limpia el carrito y los datos del cliente guardados en localStorage.
         cleanOrder()
         if (fileInputRef.current) fileInputRef.current.value = ""
+        if (receiptPreview) URL.revokeObjectURL(receiptPreview)
+        setReceiptFile(null)
+        setReceiptPreview(null)
         setTurnstileToken(null)
         setIsSubmitting(false)
         onSuccess()
@@ -310,11 +335,12 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
 
             <div className="space-y-2">
                 <p className="text-sm font-semibold text-slate-700">Comprobante de pago *</p>
-                {customer.receiptUrl ? (
+                {receiptPreview ? (
                     <div className="space-y-2">
                         <div className="relative h-40 w-full overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                            <Image src={customer.receiptUrl} alt="Comprobante de pago" fill className="object-contain" />
+                            <Image src={receiptPreview} alt="Vista previa del comprobante" fill className="object-contain" />
                         </div>
+                        <p className="text-xs text-slate-500">El comprobante se enviara junto con tu pedido.</p>
                         <button
                             type="button"
                             onClick={removeReceipt}
@@ -331,11 +357,9 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
                             accept="image/jpeg,image/png,image/webp"
                             className="sr-only"
                             onChange={handleFileChange}
-                            disabled={isUploading}
+                            disabled={isSubmitting}
                         />
-                        <span className="font-semibold text-slate-700">
-                            {isUploading ? "Subiendo..." : "Subir comprobante"}
-                        </span>
+                        <span className="font-semibold text-slate-700">Subir comprobante</span>
                         <span>JPG, PNG o WEBP</span>
                     </label>
                 )}
