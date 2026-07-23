@@ -40,6 +40,13 @@ const OrderCheckoutForm = ({ total, onSuccess }: Props) => {
     const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null)
 
     const uploadReceipt = async (file: File) => {
+        // Validar tamaño antes de comprimir y subir (5 MB igual que el servidor).
+        const MAX_SIZE = 5 * 1024 * 1024
+        if (file.size > MAX_SIZE) {
+            toast.error("La imagen supera los 5MB. Elige un archivo mas pequeno.")
+            return
+        }
+
         setIsUploading(true)
         try {
             // Comprimimos en el navegador para no chocar con el limite de subida.
