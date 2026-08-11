@@ -128,7 +128,7 @@ const ProductForm = async ({ product }: ProductFormProps) => {
                     id="categoryId"
                     name="categoryId"
                     required
-                    defaultValue={product?.categoryId}
+                    defaultValue={product?.categoryId ?? ''}
                 >
                     <option value="">-- Seleccione --</option>
                     {options.map((option) => (

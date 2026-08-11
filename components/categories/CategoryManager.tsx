@@ -9,11 +9,13 @@ import { FormEvent, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 import Image from "next/image"
+import Link from "next/link"
 import ProfileImageUpload from "@/components/profile/ProfileImageUpload"
 import Modal from "@/components/ui/Modal"
 import type { AdminCategoryItem } from "@/app/admin/(protected)/categories/page"
 
 type Level = 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
+type CategoryFormData = ReturnType<typeof CategorySchema.parse>
 
 const levelLabels: Record<Level, string> = {
     DEPARTMENT: 'Departamento',
@@ -42,6 +44,12 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
     const [uploadKey, setUploadKey] = useState(0)
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [pendingMove, setPendingMove] = useState<{
+        id: string
+        data: CategoryFormData
+        productCount: number
+        categoryName: string
+    } | null>(null)
 
     const departments = useMemo(() => categories.filter((c) => c.level === 'DEPARTMENT'), [categories])
     const categoryNodes = useMemo(() => categories.filter((c) => c.level === 'CATEGORY'), [categories])
@@ -107,17 +115,39 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
             return
         }
 
+        // Si se esta editando y el padre cambia (se "mueve" de lugar), y tiene
+        // productos asociados, primero se pregunta si deben quedar asociados o no.
+        if (editingId) {
+            const original = categories.find((c) => c.id === editingId)
+            const newParentId = result.data.parentId || null
+            const isMove = original ? (original.parentId ?? null) !== newParentId : false
+            if (original && isMove && original.productCount > 0) {
+                setPendingMove({
+                    id: editingId,
+                    data: result.data,
+                    productCount: original.productCount,
+                    categoryName: original.name,
+                })
+                return
+            }
+        }
+
+        submitCategory(editingId, result.data)
+    }
+
+    const submitCategory = (id: string | null, data: CategoryFormData, disassociateProducts?: boolean) => {
         startTransition(async () => {
-            const response = editingId
-                ? await updateCategory(editingId, result.data)
-                : await createCategory(result.data)
+            const response = id
+                ? await updateCategory(id, data, { disassociateProducts })
+                : await createCategory(data)
             if (response?.errors) {
                 response.errors.forEach((error) => toast.error(error.message))
                 return
             }
-            toast.success(editingId ? `${levelLabels[level]} actualizada` : `${levelLabels[level]} creada`)
+            toast.success(id ? `${levelLabels[data.level]} actualizada` : `${levelLabels[data.level]} creada`)
             resetForm()
             setIsModalOpen(false)
+            setPendingMove(null)
             router.refresh()
         })
     }
@@ -176,6 +206,12 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
+                        <Link
+                            href={`/admin/products?category=${node.id}`}
+                            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                        >
+                            Ver productos
+                        </Link>
                         <button
                             type="button"
                             onClick={() => openEditModal(node)}
@@ -334,6 +370,49 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                     </p>
                 )}
             </div>
+
+            <Modal
+                open={pendingMove !== null}
+                onClose={() => setPendingMove(null)}
+                title="Mover categoria"
+                description={
+                    pendingMove
+                        ? `"${pendingMove.categoryName}" tiene ${pendingMove.productCount} ${pendingMove.productCount === 1 ? 'producto asociado' : 'productos asociados'}. ¿Que deseas hacer con ${pendingMove.productCount === 1 ? 'el' : 'ellos'} al moverla?`
+                        : undefined
+                }
+            >
+                <div className="flex flex-col gap-3">
+                    <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => pendingMove && submitCategory(pendingMove.id, pendingMove.data, false)}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition-colors hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <p className="font-semibold text-slate-900">Mantener asociados</p>
+                        <p className="mt-0.5 text-sm text-slate-600">
+                            Los productos se mueven junto con la categoria y conservan su asociacion.
+                        </p>
+                    </button>
+                    <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => pendingMove && submitCategory(pendingMove.id, pendingMove.data, true)}
+                        className="rounded-2xl border border-red-200 bg-red-50 p-4 text-left transition-colors hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <p className="font-semibold text-red-800">Desasociar productos</p>
+                        <p className="mt-0.5 text-sm text-red-700">
+                            Los productos quedan sin categoria (no se eliminan) y la categoria se mueve sola.
+                        </p>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setPendingMove(null)}
+                        className="mt-1 rounded-2xl border border-transparent p-2 text-center text-sm font-semibold text-slate-500 transition-colors hover:text-slate-800"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </Modal>
         </div>
     )
 }

@@ -7,7 +7,11 @@ import { revalidatePath } from "next/cache"
 import { isAdminAuthenticated } from "@/src/lib/admin-auth"
 import type { CategoryLevel } from "@prisma/client"
 
-export const updateCategory = async (id: string, data: unknown) => {
+export const updateCategory = async (
+    id: string,
+    data: unknown,
+    options?: { disassociateProducts?: boolean },
+) => {
 
     if (!(await isAdminAuthenticated())) {
         return { errors: [{ message: 'No autorizado: inicia sesion como administrador.' }] }
@@ -72,6 +76,15 @@ export const updateCategory = async (id: string, data: unknown) => {
                 image: image || null,
             },
         })
+
+        // Si el admin decidio desasociar los productos al mover esta categoria,
+        // los productos quedan sin categoria en lugar de eliminarse.
+        if (options?.disassociateProducts) {
+            await prisma.product.updateMany({
+                where: { categoryId: id },
+                data: { categoryId: null },
+            })
+        }
     } catch {
         return { errors: [{ message: 'No se pudo actualizar. Intenta de nuevo.' }] }
     }
