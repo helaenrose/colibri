@@ -8,6 +8,8 @@ import type { CategoryNode } from '@/src/lib/category-utils'
 
 interface Props {
     tree: CategoryNode[]
+    // Se invoca al elegir una categoria/subcategoria; usado para cerrar el menu lateral en movil.
+    onNavigate?: () => void
 }
 
 // Encuentra la cadena de slugs (ancestros) hasta el nodo activo, para auto-expandir
@@ -33,7 +35,7 @@ const DepartmentIcon = ({ slug, name, image }: { slug: string; name: string; ima
     )
 }
 
-const CategoryTreeNav = ({ tree }: Props) => {
+const CategoryTreeNav = ({ tree, onNavigate }: Props) => {
     const params = useParams<{ category: string }>()
     const activeSlug = params?.category ?? ''
 
@@ -60,6 +62,7 @@ const CategoryTreeNav = ({ tree }: Props) => {
                             <Link
                                 href={`/order/${department.slug}`}
                                 aria-current={isActive ? 'page' : undefined}
+                                onClick={onNavigate}
                                 className={`flex flex-1 items-center gap-3 px-3 py-3 text-sm font-bold uppercase tracking-[0.06em] text-slate-800 transition-colors hover:bg-amber-50 ${isActive ? 'bg-amber-100' : ''}`}
                             >
                                 <DepartmentIcon slug={department.slug} name={department.name} image={department.image} />
@@ -96,6 +99,7 @@ const CategoryTreeNav = ({ tree }: Props) => {
                                                 <Link
                                                     href={`/order/${cat.slug}`}
                                                     aria-current={catActive ? 'page' : undefined}
+                                                    onClick={onNavigate}
                                                     className={`flex-1 py-2 pl-6 pr-2 text-sm font-semibold text-slate-700 transition-colors hover:text-amber-700 ${catActive ? 'text-amber-700' : ''}`}
                                                 >
                                                     {cat.name}
@@ -129,6 +133,7 @@ const CategoryTreeNav = ({ tree }: Props) => {
                                                                 key={sub.id}
                                                                 href={`/order/${sub.slug}`}
                                                                 aria-current={subActive ? 'page' : undefined}
+                                                                onClick={onNavigate}
                                                                 className={`flex items-center justify-between gap-2 py-1.5 pl-10 pr-3 text-sm text-slate-600 transition-colors hover:text-amber-700 ${subActive ? 'font-semibold text-amber-700' : ''}`}
                                                             >
                                                                 <span>{sub.name}</span>
