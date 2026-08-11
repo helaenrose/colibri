@@ -39,8 +39,8 @@ model Product {
   stock         Int             @default(0)
   active        Boolean         @default(true)
   supplier      String?
-  categoryId    String
-  category      Category        @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+  category      Category?       @relation(fields: [categoryId], references: [id])
   OrderProducts OrderProducts[]
   images        ProductImage[]
 }
@@ -51,19 +51,46 @@ enum DeliveryType {
 }
 
 model Order {
-  id            String          @id @default(cuid())
-  name          String
-  phone         String
-  email         String?
-  address       String?
-  deliveryType  DeliveryType    @default(PICKUP)
-  receiptUrl    String
-  receiptId     String
-  total         Float
-  date          DateTime        @default(now())
-  status        Boolean         @default(false)
-  orderReadyAt  DateTime?
-  orderProducts OrderProducts[]
+  id             String          @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  address        String?
+  deliveryType   DeliveryType    @default(PICKUP)
+  receiptUrl     String
+  receiptId      String
+  total          Float
+  date           DateTime        @default(now())
+  status         Boolean         @default(false)
+  orderReadyAt   DateTime?
+  orderProducts  OrderProducts[]
+  financeEntries FinanceEntry[]
+}
+
+enum FinanceEntryType {
+  INCOME
+  EXPENSE
+}
+
+// Registro de ingresos y egresos del negocio. Los ingresos de ordenes completas
+// se crean automaticamente; el resto se registra manualmente desde el modulo de finanzas.
+model FinanceEntry {
+  id                String           @id @default(cuid())
+  type              FinanceEntryType
+  amount            Float
+  description       String
+  category          String?
+  date              DateTime         @default(now())
+  orderId           String?
+  order             Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderCustomerName String?
+  deletedAt         DateTime?
+  createdAt         DateTime         @default(now())
+
+  @@index([orderId])
+  @@index([deletedAt])
+  @@index([date])
+  @@map("finance_entry")
 }
 
 model OrderProducts {
@@ -92,13 +119,15 @@ model BusinessProfile {
 }
 
 model BankAccount {
-  id          String   @id @default(cuid())
-  bankName    String
-  ownerName   String
-  idNumber    String
-  accountType String
-  email       String?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  bankName      String
+  ownerName     String
+  accountNumber String   @default("")
+  idNumber      String
+  accountType   String
+  email         String?
+  logoUrl       String?
+  createdAt     DateTime @default(now())
 
   @@map("bank_account")
 }

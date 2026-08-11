@@ -35,6 +35,7 @@ const MediaManager = ({ assets, products, categories }: Props) => {
     const [uploading, setUploading] = useState(false)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [detailId, setDetailId] = useState<string | null>(null)
+    const [isZoomOpen, setIsZoomOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
 
     const detail = useMemo(() => assets.find((a) => a.id === detailId) ?? null, [assets, detailId])
@@ -222,7 +223,12 @@ const MediaManager = ({ assets, products, categories }: Props) => {
                     <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6">
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex items-center gap-4">
-                                <span className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsZoomOpen(true)}
+                                    className="group relative size-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 transition hover:opacity-80"
+                                    aria-label="Ver imagen en grande"
+                                >
                                     <Image
                                         src={detail.url}
                                         alt={detail.name}
@@ -231,7 +237,7 @@ const MediaManager = ({ assets, products, categories }: Props) => {
                                         unoptimized={isUnoptimized(detail.url)}
                                         className="object-cover"
                                     />
-                                </span>
+                                </button>
                                 <div className="min-w-0">
                                     <p className="truncate font-semibold text-slate-900">{detail.name}</p>
                                     <button
@@ -245,7 +251,10 @@ const MediaManager = ({ assets, products, categories }: Props) => {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setDetailId(null)}
+                                onClick={() => {
+                                    setDetailId(null)
+                                    setIsZoomOpen(false)
+                                }}
                                 className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                                 aria-label="Cerrar"
                             >
@@ -341,6 +350,37 @@ const MediaManager = ({ assets, products, categories }: Props) => {
                                 </select>
                             ) : null}
                         </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {/* Vista ampliada de la imagen */}
+            {detail && isZoomOpen ? (
+                <div
+                    className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/80 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => setIsZoomOpen(false)}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setIsZoomOpen(false)}
+                        className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+                        aria-label="Cerrar"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                    <div className="relative h-full max-h-[85vh] w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+                        <Image
+                            src={detail.url}
+                            alt={detail.name}
+                            fill
+                            sizes="90vw"
+                            unoptimized={isUnoptimized(detail.url)}
+                            className="object-contain"
+                        />
                     </div>
                 </div>
             ) : null}

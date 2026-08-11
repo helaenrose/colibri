@@ -101,7 +101,7 @@ export const buildCategoryTree = (categories: Category[]): CategoryNode[] => {
 // `withProducts` es el conjunto de ids de categoria que tienen al menos un producto asociado directamente.
 export const pruneEmptyCategories = (
     nodes: CategoryNode[],
-    withProducts: Set<string>,
+    withProducts: Set<string | null>,
 ): CategoryNode[] => {
     const prune = (list: CategoryNode[]): CategoryNode[] => {
         return list

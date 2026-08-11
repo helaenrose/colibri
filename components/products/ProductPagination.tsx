@@ -23,18 +23,18 @@ const ProductPagination = ({ page, totalPages, params = {} }: Props) => {
   if (totalPages <= 1) return null
 
   return (
-    <nav className='flex justify-center py-10'>
+    <nav className='flex w-full flex-wrap items-center justify-center gap-1.5 px-4 py-10'>
 
       {page > 1 && (
         <Link href={buildHref(page - 1)}
-          className='bg-white px-4 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0'
+          className='rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 sm:px-4 sm:py-2'
         >
           &laquo;
         </Link>
       )}
       {pages.map((p) => (
         <Link
-          className={`bg-white px-4 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 ${p === page ? 'bg-gray-200 font-bold shadow text-black' : ''}`}
+          className={`rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 sm:px-4 sm:py-2 ${p === page ? 'bg-gray-200 font-bold shadow text-black' : ''}`}
           key={p}
           href={buildHref(p)}
         >
@@ -44,7 +44,7 @@ const ProductPagination = ({ page, totalPages, params = {} }: Props) => {
       }
       {page < totalPages && (
         <Link
-          className='bg-white px-4 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0'
+          className='rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 sm:px-4 sm:py-2'
           href={buildHref(page + 1)}>
           &raquo;
         </Link>

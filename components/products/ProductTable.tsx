@@ -156,8 +156,10 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                 </span>
                             </div>
                             <div className="mt-3 flex flex-wrap items-center gap-2">
-                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                                    {product.category.name}
+                                <span
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${product.category ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500 italic'}`}
+                                >
+                                    {product.category ? product.category.name : 'Sin categoría'}
                                 </span>
                                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stockBadgeClass[status]}`}>
                                     {stockLabel(product.stock, status)}
@@ -256,8 +258,10 @@ const ProductTable = ({ products }: ProductTableProps) => {
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">
-                                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 sm:text-sm">
-                                                    {product.category.name}
+                                                <span
+                                                    className={`rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${product.category ? 'bg-slate-100 text-slate-700' : 'bg-slate-200 text-slate-500 italic'}`}
+                                                >
+                                                    {product.category ? product.category.name : 'Sin categoría'}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">

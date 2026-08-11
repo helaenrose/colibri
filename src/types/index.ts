@@ -10,4 +10,7 @@ export type OrderWithProducts = Order & {
     orderProducts: (OrderProducts & {
         product: Product
     })[]
+    // true cuando el ingreso financiero de esta orden fue archivado (eliminado desde Finanzas)
+    // y puede restaurarse. undefined/false en el resto de los casos.
+    hasArchivedFinanceEntry?: boolean
 }

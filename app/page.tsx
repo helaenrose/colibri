@@ -10,6 +10,7 @@ import { buildWhatsappUrl } from "@/src/lib/whatsapp"
 import CategoryIcon from "@/components/ui/CategoryIcon"
 import InstructionsMarquee from "@/components/ui/InstructionsMarquee"
 import { FaWhatsapp } from "react-icons/fa"
+import { TbBuildingBank } from "react-icons/tb"
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getBusinessProfile()
@@ -167,12 +168,27 @@ export default async function Home() {
                   key={account.id}
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                 >
-                  <h3 className="text-lg font-black text-slate-900">{account.bankName}</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white text-slate-400">
+                      {account.logoUrl ? (
+                        <Image src={account.logoUrl} alt={`Logo de ${account.bankName}`} fill className="object-cover" />
+                      ) : (
+                        <TbBuildingBank size={20} />
+                      )}
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900">{account.bankName}</h3>
+                  </div>
                   <dl className="mt-3 space-y-2 text-sm">
                     <div className="flex flex-col">
                       <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Titular</dt>
                       <dd className="font-medium text-slate-800">{account.ownerName}</dd>
                     </div>
+                    {account.accountNumber ? (
+                      <div className="flex flex-col">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Numero de cuenta</dt>
+                        <dd className="font-medium text-slate-800">{account.accountNumber}</dd>
+                      </div>
+                    ) : null}
                     <div className="flex flex-col">
                       <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Cedula</dt>
                       <dd className="font-medium text-slate-800">{account.idNumber}</dd>

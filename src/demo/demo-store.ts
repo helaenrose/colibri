@@ -45,11 +45,25 @@ type DemoOrder = {
 
 const DEMO_RECEIPT = 'https://res.cloudinary.com/demo/image/upload/sample.jpg'
 
+type DemoFinanceEntry = {
+  id: string
+  type: 'INCOME' | 'EXPENSE'
+  amount: number
+  description: string
+  category: string | null
+  date: Date
+  orderId: string | null
+  orderCustomerName: string | null
+  deletedAt: Date | null
+  createdAt: Date
+}
+
 type DemoState = {
   categories: typeof seedCategories
   products: DemoProduct[]
   pendingOrders: DemoOrder[]
   readyOrders: DemoOrder[]
+  financeEntries: DemoFinanceEntry[]
 }
 
 const categoryById = new Map(seedCategories.map((category) => [category.id, category]))
@@ -148,11 +162,39 @@ const initialReadyOrders: DemoOrder[] = [
   },
 ]
 
+const initialFinanceEntries: DemoFinanceEntry[] = [
+  {
+    id: 'demo-finance-income-1',
+    type: 'INCOME',
+    amount: initialReadyOrders[0].total,
+    description: `Orden completada - ${initialReadyOrders[0].name}`,
+    category: 'Ventas',
+    date: initialReadyOrders[0].orderReadyAt ?? new Date(),
+    orderId: initialReadyOrders[0].id,
+    orderCustomerName: initialReadyOrders[0].name,
+    deletedAt: null,
+    createdAt: initialReadyOrders[0].orderReadyAt ?? new Date(),
+  },
+  {
+    id: 'demo-finance-expense-1',
+    type: 'EXPENSE',
+    amount: 45,
+    description: 'Compra de insumos de limpieza',
+    category: 'Insumos',
+    date: new Date('2026-05-20T09:00:00.000Z'),
+    orderId: null,
+    orderCustomerName: null,
+    deletedAt: null,
+    createdAt: new Date('2026-05-20T09:00:00.000Z'),
+  },
+]
+
 const createInitialState = (): DemoState => ({
   categories: seedCategories,
   products: [...initialDemoProducts],
   pendingOrders: [...initialPendingOrders],
   readyOrders: [...initialReadyOrders],
+  financeEntries: [...initialFinanceEntries],
 })
 
 declare global {
@@ -205,7 +247,13 @@ export const getDemoProductsByCategoryTree = (slug: string) => {
 
 export const getDemoPendingOrders = () => state.pendingOrders
 
-export const getDemoReadyOrders = () => state.readyOrders
+export const getDemoReadyOrders = () =>
+  state.readyOrders.map((order) => ({
+    ...order,
+    hasArchivedFinanceEntry: state.financeEntries.some(
+      (entry) => entry.orderId === order.id && entry.deletedAt !== null,
+    ),
+  }))
 
 export const createDemoProduct = (data: { name: string; price: number; stock: number; categoryId: string; image: string; supplier?: string | null }) => {
   const category = state.categories.find((item) => item.id === data.categoryId)
@@ -298,14 +346,33 @@ export const completeDemoOrder = (orderId: string) => {
     )
   })
 
+  const readyAt = new Date()
   const completedOrder = {
     ...order,
     status: true,
-    orderReadyAt: new Date(),
+    orderReadyAt: readyAt,
   }
 
   state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
   state.readyOrders = [completedOrder, ...state.readyOrders]
+
+  // Se crea automaticamente el ingreso asociado a la orden completada
+  state.financeEntries = [
+    {
+      id: createId('demo-finance-income'),
+      type: 'INCOME',
+      amount: completedOrder.total,
+      description: `Orden completada - ${completedOrder.name}`,
+      category: 'Ventas',
+      date: readyAt,
+      orderId: completedOrder.id,
+      orderCustomerName: completedOrder.name,
+      deletedAt: null,
+      createdAt: readyAt,
+    },
+    ...state.financeEntries,
+  ]
+
   return completedOrder
 }
 
@@ -317,5 +384,69 @@ export const deleteDemoOrder = (orderId: string) => {
 
   state.pendingOrders = state.pendingOrders.filter((item) => item.id !== orderId)
   state.readyOrders = state.readyOrders.filter((item) => item.id !== orderId)
+
+  // El ingreso asociado permanece pero pierde la referencia a la orden eliminada
+  state.financeEntries = state.financeEntries.map((entry) =>
+    entry.orderId === orderId ? { ...entry, orderId: null } : entry,
+  )
+
   return order
+}
+
+export const getDemoFinanceEntries = () => state.financeEntries
+
+export const createDemoFinanceEntry = (data: {
+  type: 'INCOME' | 'EXPENSE'
+  amount: number
+  description: string
+  category?: string | null
+  date: Date
+}) => {
+  const entry: DemoFinanceEntry = {
+    id: createId('demo-finance'),
+    type: data.type,
+    amount: data.amount,
+    description: data.description,
+    category: data.category || null,
+    date: data.date,
+    orderId: null,
+    orderCustomerName: null,
+    deletedAt: null,
+    createdAt: new Date(),
+  }
+
+  state.financeEntries = [entry, ...state.financeEntries]
+  return entry
+}
+
+// Elimina el registro. Si esta asociado a una orden existente, se archiva (soft delete)
+// para poder restaurarse desde la orden; en caso contrario se elimina definitivamente.
+export const deleteDemoFinanceEntry = (id: string) => {
+  const entry = state.financeEntries.find((item) => item.id === id)
+  if (!entry) return null
+
+  const orderStillExists =
+    entry.orderId !== null &&
+    (state.pendingOrders.some((order) => order.id === entry.orderId) ||
+      state.readyOrders.some((order) => order.id === entry.orderId))
+
+  if (orderStillExists) {
+    state.financeEntries = state.financeEntries.map((item) =>
+      item.id === id ? { ...item, deletedAt: new Date() } : item,
+    )
+    return { ...entry, archived: true }
+  }
+
+  state.financeEntries = state.financeEntries.filter((item) => item.id !== id)
+  return { ...entry, archived: false }
+}
+
+export const restoreDemoFinanceEntry = (orderId: string) => {
+  const entry = state.financeEntries.find((item) => item.orderId === orderId && item.deletedAt !== null)
+  if (!entry) return null
+
+  state.financeEntries = state.financeEntries.map((item) =>
+    item.id === entry.id ? { ...item, deletedAt: null } : item,
+  )
+  return entry
 }

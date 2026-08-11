@@ -28,7 +28,9 @@ const buildWhere = (filters: Filters): Prisma.ProductWhereInput => {
     if (filters.search) {
         where.name = { contains: filters.search, mode: "insensitive" }
     }
-    if (filters.category) {
+    if (filters.category === "none") {
+        where.categoryId = null
+    } else if (filters.category) {
         where.categoryId = filters.category
     }
     if (filters.estado === "active") where.active = true
@@ -55,7 +57,8 @@ const filterDemoProducts = (filters: Filters) => {
     const max = filters.max ? Number(filters.max) : undefined
     return getDemoProducts().filter((p) => {
         if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase())) return false
-        if (filters.category && p.categoryId !== filters.category) return false
+        if (filters.category === "none" && p.categoryId) return false
+        if (filters.category && filters.category !== "none" && p.categoryId !== filters.category) return false
         if (filters.estado === "active" && !p.active) return false
         if (filters.estado === "inactive" && p.active) return false
         if (filters.stock) {
@@ -160,9 +163,9 @@ const ProductsPage = async ({
                 </CreateProductModal>
             </div>
 
-            <ProductFilters categories={categories} />
-
             <ProductCsvImport />
+
+            <ProductFilters categories={categories} />
 
             {products.length ? (
                 <ProductTable products={products} />

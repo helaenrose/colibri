@@ -125,6 +125,7 @@ const ProductFilters = ({ categories }: ProductFiltersProps) => {
                         className={selectClass}
                     >
                         <option value="">Todas</option>
+                        <option value="none">Sin categoría</option>
                         {categories.map((c) => (
                             <option key={c.id} value={c.id}>
                                 {levelPrefix[c.level]}

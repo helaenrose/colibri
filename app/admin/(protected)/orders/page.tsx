@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import useSWR from "swr"
 import OrderCard from '@/components/order/OrderCard'
 import Heading from '@/components/ui/Heading'
@@ -8,6 +9,24 @@ import Loading from '@/components/ui/Loading'
 import ErrorState from '@/components/ui/ErrorState'
 import EmptyState from '@/components/ui/EmptyState'
 import { useOrderChannelSync } from "@/src/hooks/useOrderChannelSync"
+import OrderFilters, { defaultOrderFilters, OrderFiltersState } from '@/components/order/OrderFilters'
+
+const matchesFilters = (order: OrderWithProducts, filters: OrderFiltersState) => {
+    if (filters.search) {
+        const term = filters.search.trim().toLowerCase()
+        const matchesName = order.name.toLowerCase().includes(term)
+        const matchesPhone = order.phone.toLowerCase().includes(term)
+        if (!matchesName && !matchesPhone) return false
+    }
+
+    if (filters.deliveryType && order.deliveryType !== filters.deliveryType) return false
+
+    const orderDate = new Date(order.date)
+    if (filters.from && orderDate < new Date(`${filters.from}T00:00:00`)) return false
+    if (filters.to && orderDate > new Date(`${filters.to}T23:59:59`)) return false
+
+    return true
+}
 
 const OrdersPage = () => {
 
@@ -30,7 +49,13 @@ const OrdersPage = () => {
         revalidateOnFocus: false
     })
     useOrderChannelSync('/admin/orders/api')
-    
+
+    const [filters, setFilters] = useState<OrderFiltersState>(defaultOrderFilters)
+    const filteredData = useMemo(
+        () => (data ?? []).filter((order) => matchesFilters(order, filters)),
+        [data, filters],
+    )
+
     if (isLoading) return <Loading message="Cargando órdenes..." />
     if (error) return <ErrorState message="Hubo un error al cargar las órdenes." />
     if (data) return (
@@ -52,13 +77,19 @@ const OrdersPage = () => {
                 </div>
             </section>
 
-            {data.length ? (
+            <OrderFilters filters={filters} onChange={setFilters} resultCount={filteredData.length} dateLabel="Fecha de orden" />
+
+            {data.length === 0 ? (
+                <EmptyState message="No hay órdenes pendientes" />
+            ) : filteredData.length ? (
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {data.map((order) => (
+                    {filteredData.map((order) => (
                         <OrderCard key={order.id} order={order} />
                     ))}
                 </div>
-            ) : <EmptyState message="No hay órdenes pendientes" />}
+            ) : (
+                <EmptyState message="No hay resultados para estos filtros" />
+            )}
         </div>
     )
 }

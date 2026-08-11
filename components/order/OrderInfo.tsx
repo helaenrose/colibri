@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
 import { OrderWithProducts } from "@/src/types"
 
@@ -7,6 +10,7 @@ interface OrderInfoProps {
 
 const OrderInfo = ({ order }: OrderInfoProps) => {
     const isDelivery = order.deliveryType === "DELIVERY"
+    const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
     return (
         <div className="mt-4 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
@@ -40,11 +44,11 @@ const OrderInfo = ({ order }: OrderInfoProps) => {
 
             <div>
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Comprobante de pago</p>
-                <a
-                    href={order.receiptUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group block overflow-hidden rounded-xl border border-slate-200"
+                <button
+                    type="button"
+                    onClick={() => setIsReceiptOpen(true)}
+                    className="group block w-full overflow-hidden rounded-xl border border-slate-200"
+                    aria-label="Ver comprobante de pago en grande"
                 >
                     <span className="relative block h-40 w-full bg-white">
                         <Image
@@ -55,8 +59,40 @@ const OrderInfo = ({ order }: OrderInfoProps) => {
                             className="object-contain transition group-hover:scale-105"
                         />
                     </span>
-                </a>
+                </button>
             </div>
+
+            {isReceiptOpen ? (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => setIsReceiptOpen(false)}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setIsReceiptOpen(false)}
+                        className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+                        aria-label="Cerrar"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+                        </svg>
+                    </button>
+                    <div
+                        className="relative h-full max-h-[85vh] w-full max-w-3xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Image
+                            src={order.receiptUrl}
+                            alt={`Comprobante de pago de ${order.name}`}
+                            fill
+                            sizes="90vw"
+                            className="object-contain"
+                        />
+                    </div>
+                </div>
+            ) : null}
         </div>
     )
 }

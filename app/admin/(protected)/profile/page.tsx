@@ -4,12 +4,16 @@ import BankAccountManager from "@/components/profile/BankAccountManager"
 import InstructionsEditor from "@/components/profile/InstructionsEditor"
 import ChangePasswordForm from "@/components/profile/ChangePasswordForm"
 import { getBusinessProfile } from "@/src/lib/business-profile"
-import { getBankAccounts } from "@/src/lib/bank-accounts"
+import { getBankAccounts, getBankAccountLogos } from "@/src/lib/bank-accounts"
 
 export const dynamic = 'force-dynamic'
 
 const ProfilePage = async () => {
-    const [profile, bankAccounts] = await Promise.all([getBusinessProfile(), getBankAccounts()])
+    const [profile, bankAccounts, bankLogos] = await Promise.all([
+        getBusinessProfile(),
+        getBankAccounts(),
+        getBankAccountLogos(),
+    ])
 
     return (
         <div className="space-y-6">
@@ -45,7 +49,7 @@ const ProfilePage = async () => {
                 </p>
             </section>
 
-            <BankAccountManager accounts={bankAccounts} />
+            <BankAccountManager accounts={bankAccounts} availableLogos={bankLogos} />
 
             <section className="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.07)] backdrop-blur sm:p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Seguridad</p>
