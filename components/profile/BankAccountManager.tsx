@@ -193,15 +193,13 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
                         <label htmlFor="ownerName" className="text-sm font-semibold text-slate-800">Titular de la cuenta</label>
                         <input id="ownerName" type="text" value={form.ownerName} onChange={handleChange('ownerName')} placeholder="Ej. Maria Perez" className={inputClass} />
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5">
-                            <label htmlFor="accountNumber" className="text-sm font-semibold text-slate-800">Numero de cuenta</label>
-                            <input id="accountNumber" type="text" value={form.accountNumber} onChange={handleChange('accountNumber')} placeholder="Ej. 2200123456" className={inputClass} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label htmlFor="idNumber" className="text-sm font-semibold text-slate-800">Cedula</label>
-                            <input id="idNumber" type="text" value={form.idNumber} onChange={handleChange('idNumber')} placeholder="Ej. 1712345678" className={inputClass} />
-                        </div>
+                    <div className="space-y-1.5">
+                        <label htmlFor="accountNumber" className="text-sm font-semibold text-slate-800">Numero de cuenta</label>
+                        <input id="accountNumber" type="text" value={form.accountNumber} onChange={handleChange('accountNumber')} placeholder="Ej. 2200123456" className={inputClass} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label htmlFor="idNumber" className="text-sm font-semibold text-slate-800">Cedula</label>
+                        <input id="idNumber" type="text" value={form.idNumber} onChange={handleChange('idNumber')} placeholder="Ej. 1712345678" className={inputClass} />
                     </div>
                     <div className="space-y-1.5">
                         <label htmlFor="accountType" className="text-sm font-semibold text-slate-800">Tipo de cuenta</label>
