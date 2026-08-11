@@ -1,5 +1,5 @@
 import ProductCard from "@/components/products/ProductCard"
-import Heading from "@/components/ui/Heading"
+import CatalogHeader, { type AppliedFilter } from "@/components/order/CatalogHeader"
 import { prisma } from "@/src/lib/prisma"
 import { collectDescendantIds } from "@/src/lib/category-utils"
 import {
@@ -63,19 +63,24 @@ const SearchPage = async ({
         ? await searchProducts(query, cat)
         : { products: [], scopeName: null }
 
+    const filters: AppliedFilter[] = hasQuery
+        ? [
+            { label: "Busqueda", value: `"${query}"` },
+            ...(scopeName ? [{ label: "Categoria", value: scopeName }] : []),
+        ]
+        : []
+
     return (
         <div className="space-y-6 sm:space-y-8">
-            <section className="rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.2),_transparent_45%),linear-gradient(145deg,_#ffffff,_#f8fafc)] p-4 shadow-sm sm:p-6 md:p-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">
-                    {scopeName ? `Buscando en ${scopeName}` : "Buscando en todo el catalogo"}
-                </p>
-                <Heading>{hasQuery ? `Resultados para "${query}"` : "Buscar productos"}</Heading>
-                <p className="-mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                    {hasQuery
+            <CatalogHeader
+                title={hasQuery ? "Resultados de busqueda" : "Buscar productos"}
+                description={
+                    hasQuery
                         ? `${products.length} ${products.length === 1 ? "producto encontrado" : "productos encontrados"}.`
-                        : "Escribe en el buscador del menu para encontrar productos por nombre."}
-                </p>
-            </section>
+                        : "Escribe en el buscador del menu para encontrar productos por nombre."
+                }
+                filters={filters}
+            />
 
             {hasQuery ? (
                 <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
