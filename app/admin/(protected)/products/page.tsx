@@ -160,9 +160,9 @@ const ProductsPage = async ({
                 </CreateProductModal>
             </div>
 
-            <ProductFilters categories={categories} />
-
             <ProductCsvImport />
+
+            <ProductFilters categories={categories} />
 
             {products.length ? (
                 <ProductTable products={products} />

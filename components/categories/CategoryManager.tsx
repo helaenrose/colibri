@@ -1,6 +1,7 @@
 'use client'
 
 import { createCategory } from "@/actions/create-category-action"
+import { updateCategory } from "@/actions/update-category-action"
 import { deleteCategory } from "@/actions/delete-category-action"
 import { CategorySchema } from "@/src/schema"
 import { useToastZodErrors } from "@/src/hooks/useToastZodErrors"
@@ -31,12 +32,13 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
     const router = useRouter()
     const { showIssues } = useToastZodErrors()
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [level, setLevel] = useState<Level>('DEPARTMENT')
     const [parentId, setParentId] = useState('')
     const [code, setCode] = useState('')
     const [image, setImage] = useState('')
-    // Cambia para forzar el remount del componente de imagen y limpiarlo tras crear
+    // Cambia para forzar el remount del componente de imagen y limpiarlo/precargarlo
     const [uploadKey, setUploadKey] = useState(0)
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -63,6 +65,32 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
         return byParent
     }, [categories])
 
+    const resetForm = () => {
+        setEditingId(null)
+        setName('')
+        setLevel('DEPARTMENT')
+        setParentId('')
+        setCode('')
+        setImage('')
+        setUploadKey((k) => k + 1)
+    }
+
+    const openCreateModal = () => {
+        resetForm()
+        setIsModalOpen(true)
+    }
+
+    const openEditModal = (node: AdminCategoryItem) => {
+        setEditingId(node.id)
+        setName(node.name)
+        setLevel(node.level)
+        setParentId(node.parentId ?? '')
+        setCode(node.code ?? '')
+        setImage(node.image ?? '')
+        setUploadKey((k) => k + 1)
+        setIsModalOpen(true)
+    }
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
@@ -80,16 +108,15 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
         }
 
         startTransition(async () => {
-            const response = await createCategory(result.data)
+            const response = editingId
+                ? await updateCategory(editingId, result.data)
+                : await createCategory(result.data)
             if (response?.errors) {
                 response.errors.forEach((error) => toast.error(error.message))
                 return
             }
-            toast.success(`${levelLabels[level]} creada`)
-            setName('')
-            setCode('')
-            setImage('')
-            setUploadKey((k) => k + 1)
+            toast.success(editingId ? `${levelLabels[level]} actualizada` : `${levelLabels[level]} creada`)
+            resetForm()
             setIsModalOpen(false)
             router.refresh()
         })
@@ -148,14 +175,23 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         </p>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => handleDelete(node.id)}
-                        disabled={isPending && deletingId === node.id}
-                        className="shrink-0 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {isPending && deletingId === node.id ? 'Eliminando...' : 'Eliminar'}
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => openEditModal(node)}
+                            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                        >
+                            Editar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleDelete(node.id)}
+                            disabled={isPending && deletingId === node.id}
+                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {isPending && deletingId === node.id ? 'Eliminando...' : 'Eliminar'}
+                        </button>
+                    </div>
                 </div>
                 {children.length > 0 ? (
                     <ul className="space-y-2">{children.map((child) => renderNode(child, depth + 1))}</ul>
@@ -174,7 +210,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                 </p>
                 <button
                     type="button"
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={openCreateModal}
                     className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
                 >
                     Crear categoria
@@ -183,9 +219,16 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
 
             <Modal
                 open={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Nuevo elemento"
-                description="Agrega un Departamento, Categoria o Subcategoria manualmente."
+                onClose={() => {
+                    setIsModalOpen(false)
+                    resetForm()
+                }}
+                title={editingId ? 'Editar elemento' : 'Nuevo elemento'}
+                description={
+                    editingId
+                        ? 'Actualiza los datos del Departamento, Categoria o Subcategoria.'
+                        : 'Agrega un Departamento, Categoria o Subcategoria manualmente.'
+                }
             >
                 <form onSubmit={handleSubmit} noValidate>
                 <div className="mt-1 space-y-2">
@@ -261,6 +304,7 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                 <div className="mt-4">
                     <ProfileImageUpload
                         key={uploadKey}
+                        image={image}
                         label={`Foto de ${levelLabels[level].toLowerCase()} (opcional)`}
                         onChange={setImage}
                     />
@@ -271,7 +315,11 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                     disabled={isPending}
                     className="mt-5 w-full rounded-md bg-slate-900 p-3 font-semibold text-white transition-all hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    {isPending ? 'Guardando...' : `Crear ${levelLabels[level].toLowerCase()}`}
+                    {isPending
+                        ? 'Guardando...'
+                        : editingId
+                            ? `Guardar cambios`
+                            : `Crear ${levelLabels[level].toLowerCase()}`}
                 </button>
                 </form>
             </Modal>
