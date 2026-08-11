@@ -110,6 +110,22 @@ export const BankAccountIdSchema = z.object({
     id: z.string().trim().min(1, { message: 'El id de la cuenta es obligatorio' })
 })
 
+export const FinanceEntryTypeEnum = z.enum(['INCOME', 'EXPENSE'])
+
+export const FinancePeriodEnum = z.enum(['day', 'week', 'month', 'year'])
+
+export const FinanceEntrySchema = z.object({
+    type: FinanceEntryTypeEnum,
+    amount: z.coerce.number().positive({ message: 'El monto debe ser mayor a 0' }),
+    description: z.string().trim().min(3, { message: 'La descripcion es obligatoria (min 3 caracteres)' }),
+    category: z.string().trim().max(60, { message: 'La categoria es demasiado larga (max 60 caracteres)' }).optional().or(z.literal('')),
+    date: z.coerce.date({ message: 'La fecha no es valida' }),
+})
+
+export const FinanceEntryIdSchema = z.object({
+    id: z.string().trim().min(1, { message: 'El id del registro es obligatorio' }),
+})
+
 export const BusinessProfileSchema = z.object({
     name: z.string()
         .trim()

@@ -6,6 +6,7 @@ import { getBusinessProfile } from "@/src/lib/business-profile"
 const adminNavigation = [
     { url: '/admin/orders', text: 'Ordenes pendientes', blank: false },
     { url: '/admin/completed', text: 'Ordenes completadas', blank: false },
+    { url: '/admin/finance', text: 'Finanzas', blank: false },
     { url: '/admin/products', text: 'Productos', blank: false },
     { url: '/admin/categories', text: 'Categorias', blank: false },
     { url: '/admin/media', text: 'Galeria de imagenes', blank: false },

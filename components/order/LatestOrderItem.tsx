@@ -4,6 +4,7 @@ import { OrderWithProducts } from '@/src/types'
 import React from 'react'
 import OrderInfo from './OrderInfo'
 import DeleteOrderButton from './DeleteOrderButton'
+import RestoreFinanceEntryButton from './RestoreFinanceEntryButton'
 
 interface LatestOrderItemProps {
     order: OrderWithProducts
@@ -41,6 +42,8 @@ const LatestOrderItem = ({ order, index }: LatestOrderItemProps) => {
             </ul>
 
             <OrderInfo order={order} />
+
+            {order.hasArchivedFinanceEntry ? <RestoreFinanceEntryButton orderId={order.id} /> : null}
 
             <DeleteOrderButton orderId={order.id} mutateKey="/admin/completed/api" />
         </article>

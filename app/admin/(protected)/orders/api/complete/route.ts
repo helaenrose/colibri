@@ -44,13 +44,30 @@ export const POST = async (request: NextRequest) => {
         }
       }
 
+      const readyAt = new Date(Date.now())
+
       await tx.order.update({
         where: { id: order.id },
         data: {
           status: true,
-          orderReadyAt: new Date(Date.now()),
+          orderReadyAt: readyAt,
         },
       })
+
+      // Se registra automaticamente el ingreso asociado a esta orden (solo una vez)
+      if (!order.status) {
+        await tx.financeEntry.create({
+          data: {
+            type: 'INCOME',
+            amount: order.total,
+            description: `Orden completada - ${order.name}`,
+            category: 'Ventas',
+            date: readyAt,
+            orderId: order.id,
+            orderCustomerName: order.name,
+          },
+        })
+      }
     }))
 
     return Response.json({ success: true })
