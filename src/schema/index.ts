@@ -95,9 +95,15 @@ export const CategoryImportRowSchema = z.object({
 export const BankAccountSchema = z.object({
     bankName: z.string().trim().min(2, { message: 'El nombre del banco es obligatorio' }),
     ownerName: z.string().trim().min(2, { message: 'El nombre del titular es obligatorio' }),
+    accountNumber: z.string().trim().min(3, { message: 'El numero de cuenta es obligatorio' }),
     idNumber: z.string().trim().min(3, { message: 'La cedula es obligatoria' }),
     accountType: z.string().trim().min(2, { message: 'El tipo de cuenta es obligatorio' }),
-    email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal(''))
+    email: z.string().trim().email({ message: 'Correo no valido' }).optional().or(z.literal('')),
+    logoUrl: z.string().trim().optional().or(z.literal(''))
+})
+
+export const UpdateBankAccountSchema = BankAccountSchema.extend({
+    id: z.string().trim().min(1, { message: 'El id de la cuenta es obligatorio' })
 })
 
 export const BankAccountIdSchema = z.object({

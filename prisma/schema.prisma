@@ -92,13 +92,15 @@ model BusinessProfile {
 }
 
 model BankAccount {
-  id          String   @id @default(cuid())
-  bankName    String
-  ownerName   String
-  idNumber    String
-  accountType String
-  email       String?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  bankName      String
+  ownerName     String
+  accountNumber String   @default("")
+  idNumber      String
+  accountType   String
+  email         String?
+  logoUrl       String?
+  createdAt     DateTime @default(now())
 
   @@map("bank_account")
 }
