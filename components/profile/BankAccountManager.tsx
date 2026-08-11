@@ -22,7 +22,7 @@ const emptyForm = {
     logoUrl: '',
 }
 
-const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
+const BankAccountManager = ({ accounts, availableLogos = [] }: { accounts: BankAccountData[]; availableLogos?: string[] }) => {
 
     const router = useRouter()
     const { showIssues } = useToastZodErrors()
@@ -31,6 +31,7 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+    const [isLogoPickerOpen, setIsLogoPickerOpen] = useState(false)
     const logoInputRef = useRef<HTMLInputElement>(null)
 
     const handleChange = (field: keyof typeof emptyForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,11 +73,18 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
             }
             setForm((prev) => ({ ...prev, logoUrl: result.asset.url }))
             toast.success('Logo cargado')
+            setIsLogoPickerOpen(false)
         } catch {
             toast.error('Ocurrio un error al subir el logo.')
         } finally {
             setIsUploadingLogo(false)
         }
+    }
+
+    // Reutiliza un logo ya subido previamente en otra cuenta, sin volver a subir el archivo.
+    const selectExistingLogo = (url: string) => {
+        setForm((prev) => ({ ...prev, logoUrl: url }))
+        setIsLogoPickerOpen(false)
     }
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -154,7 +162,7 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                onClick={() => logoInputRef.current?.click()}
+                                onClick={() => setIsLogoPickerOpen(true)}
                                 disabled={isUploadingLogo}
                                 className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
                             >
@@ -168,11 +176,15 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
                                 {isUploadingLogo ? (
                                     <p className="font-semibold text-slate-700">Subiendo...</p>
                                 ) : (
-                                    <>
-                                        <p>JPG, PNG o WEBP.</p>
-                                        <p>Se muestra junto al banco en el sitio publico.</p>
-                                    </>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsLogoPickerOpen(true)}
+                                        className="font-semibold text-amber-700 hover:underline"
+                                    >
+                                        {form.logoUrl ? 'Cambiar logo' : 'Elegir o subir logo'}
+                                    </button>
                                 )}
+                                <p className="mt-1">Se muestra junto al banco en el sitio publico.</p>
                                 {form.logoUrl && !isUploadingLogo ? (
                                     <button
                                         type="button"
@@ -286,6 +298,71 @@ const BankAccountManager = ({ accounts }: { accounts: BankAccountData[] }) => {
                     </p>
                 )}
             </div>
+
+            {/* Selector de logo: reutiliza logos ya subidos o permite subir uno nuevo */}
+            {isLogoPickerOpen ? (
+                <div
+                    className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4"
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-6">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="font-semibold text-slate-900">Elegir logo del banco</p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Reutiliza un logo ya subido o sube uno nuevo.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsLogoPickerOpen(false)}
+                                className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                aria-label="Cerrar"
+                            >
+                                <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => logoInputRef.current?.click()}
+                            disabled={isUploadingLogo}
+                            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <TbPhotoPlus size={18} />
+                            {isUploadingLogo ? 'Subiendo...' : 'Subir un logo nuevo'}
+                        </button>
+
+                        <div className="mt-5">
+                            <p className="text-sm font-semibold text-slate-800">Logos ya subidos</p>
+                            {availableLogos.length === 0 ? (
+                                <p className="mt-2 text-sm text-slate-500">
+                                    Aun no has subido ningun logo de banco. El primero que subas quedara disponible aqui para reutilizarlo.
+                                </p>
+                            ) : (
+                                <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                                    {availableLogos.map((url) => (
+                                        <button
+                                            key={url}
+                                            type="button"
+                                            onClick={() => selectExistingLogo(url)}
+                                            className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-white transition hover:opacity-80 ${
+                                                form.logoUrl === url ? 'border-amber-500 ring-2 ring-amber-300' : 'border-slate-200'
+                                            }`}
+                                            aria-label="Usar este logo"
+                                        >
+                                            <Image src={url} alt="Logo disponible" fill className="object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </div>
     )
 }
