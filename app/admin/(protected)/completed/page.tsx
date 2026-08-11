@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import LatestOrderItem from '@/components/order/LatestOrderItem'
 import Heading from '@/components/ui/Heading'
@@ -8,6 +9,24 @@ import Loading from '@/components/ui/Loading'
 import ErrorState from '@/components/ui/ErrorState'
 import EmptyState from '@/components/ui/EmptyState'
 import { useOrderChannelSync } from '@/src/hooks/useOrderChannelSync'
+import OrderFilters, { defaultOrderFilters, OrderFiltersState } from '@/components/order/OrderFilters'
+
+const matchesFilters = (order: OrderWithProducts, filters: OrderFiltersState) => {
+    if (filters.search) {
+        const term = filters.search.trim().toLowerCase()
+        const matchesName = order.name.toLowerCase().includes(term)
+        const matchesPhone = order.phone.toLowerCase().includes(term)
+        if (!matchesName && !matchesPhone) return false
+    }
+
+    if (filters.deliveryType && order.deliveryType !== filters.deliveryType) return false
+
+    const readyDate = order.orderReadyAt ? new Date(order.orderReadyAt) : null
+    if (filters.from && (!readyDate || readyDate < new Date(`${filters.from}T00:00:00`))) return false
+    if (filters.to && (!readyDate || readyDate > new Date(`${filters.to}T23:59:59`))) return false
+
+    return true
+}
 
 const CompletedOrdersPage = () => {
 
@@ -28,9 +47,15 @@ const CompletedOrdersPage = () => {
     const { data, error, isLoading } = useSWR<OrderWithProducts[]>(url, fetcher, {
         revalidateOnFocus: false
     })
-    const readyOrders = data?.filter(order => order.status === true) ?? []
+    const readyOrders = useMemo(() => data?.filter(order => order.status === true) ?? [], [data])
 
     useOrderChannelSync(url)
+
+    const [filters, setFilters] = useState<OrderFiltersState>(defaultOrderFilters)
+    const filteredOrders = useMemo(
+        () => readyOrders.filter((order) => matchesFilters(order, filters)),
+        [readyOrders, filters],
+    )
 
     if (isLoading) return <Loading message="Cargando ordenes..." />
     if (error) return <ErrorState message="Hubo un error al cargar las ordenes." />
@@ -53,14 +78,18 @@ const CompletedOrdersPage = () => {
                 </div>
             </section>
 
-            {readyOrders.length ? (
+            <OrderFilters filters={filters} onChange={setFilters} resultCount={filteredOrders.length} dateLabel="Fecha de entrega" />
+
+            {readyOrders.length === 0 ? (
+                <EmptyState message="No hay ordenes completadas por ahora" />
+            ) : filteredOrders.length ? (
                 <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
-                    {readyOrders.map((order, index) => (
+                    {filteredOrders.map((order, index) => (
                         <LatestOrderItem key={order.id} order={order} index={index} />
                     ))}
                 </div>
             ) : (
-                <EmptyState message="No hay ordenes completadas por ahora" />
+                <EmptyState message="No hay resultados para estos filtros" />
             )}
         </div>
     )

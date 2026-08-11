@@ -12,7 +12,7 @@ export const GET = async () => {
 
   try {
     const orders = await prisma.order.findMany({
-      take: 10,
+      take: 200,
       where: {
         orderReadyAt: {
           not: null
