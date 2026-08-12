@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from "react"
+import { createPortal } from "react-dom"
+import { useEffect, useState } from "react"
 import { IoClose } from "react-icons/io5"
 
 interface ModalProps {
@@ -13,6 +14,12 @@ interface ModalProps {
 
 // Modal reutilizable: cierra con Escape o clic en el fondo y bloquea el scroll de la pagina.
 const Modal = ({ open, onClose, title, description, children }: ModalProps) => {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
     useEffect(() => {
         if (!open) return
 
@@ -28,11 +35,11 @@ const Modal = ({ open, onClose, title, description, children }: ModalProps) => {
         }
     }, [open, onClose])
 
-    if (!open) return null
+    if (!open || !mounted) return null
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:items-center"
+            className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:items-center"
             role="dialog"
             aria-modal="true"
             aria-label={title}
@@ -63,7 +70,8 @@ const Modal = ({ open, onClose, title, description, children }: ModalProps) => {
                 {/* Cuerpo con scroll interno */}
                 <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">{children}</div>
             </div>
-        </div>
+        </div>,
+        document.body,
     )
 }
 
