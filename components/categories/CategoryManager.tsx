@@ -3,16 +3,18 @@
 import { createCategory } from "@/actions/create-category-action"
 import { updateCategory } from "@/actions/update-category-action"
 import { deleteCategory } from "@/actions/delete-category-action"
+import { assignProductToCategory, removeProductFromCategory } from "@/actions/category-product-association-actions"
 import { CategorySchema } from "@/src/schema"
 import { useToastZodErrors } from "@/src/hooks/useToastZodErrors"
 import { FormEvent, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 import Image from "next/image"
-import Link from "next/link"
 import ProfileImageUpload from "@/components/profile/ProfileImageUpload"
 import Modal from "@/components/ui/Modal"
-import type { AdminCategoryItem } from "@/app/admin/(protected)/categories/page"
+import type { AdminCategoryItem, CategoryProductOption } from "@/app/admin/(protected)/categories/page"
+
+const isUnoptimizedImage = (url: string) => url.startsWith("http") && !url.includes("res.cloudinary.com")
 
 type Level = 'DEPARTMENT' | 'CATEGORY' | 'SUBCATEGORY'
 type CategoryFormData = ReturnType<typeof CategorySchema.parse>
@@ -29,7 +31,7 @@ const levelBadge: Record<Level, string> = {
     SUBCATEGORY: 'bg-emerald-100 text-emerald-700',
 }
 
-const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) => {
+const CategoryManager = ({ categories, products }: { categories: AdminCategoryItem[]; products: CategoryProductOption[] }) => {
 
     const router = useRouter()
     const { showIssues } = useToastZodErrors()
@@ -50,6 +52,34 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
         productCount: number
         categoryName: string
     } | null>(null)
+    // Categoria cuyo modal "Ver productos" esta abierto
+    const [productsCategoryId, setProductsCategoryId] = useState<string | null>(null)
+    const [isAssocPending, startAssocTransition] = useTransition()
+
+    const productsCategory = useMemo(
+        () => categories.find((c) => c.id === productsCategoryId) ?? null,
+        [categories, productsCategoryId],
+    )
+    const categoryProducts = useMemo(
+        () => products.filter((p) => p.categoryId === productsCategoryId),
+        [products, productsCategoryId],
+    )
+    const otherProducts = useMemo(
+        () => products.filter((p) => p.categoryId !== productsCategoryId),
+        [products, productsCategoryId],
+    )
+
+    const runAssociation = (fn: () => Promise<{ success: boolean; message?: string }>, okMsg: string) => {
+        startAssocTransition(async () => {
+            const result = await fn()
+            if (result.success) {
+                toast.success(okMsg)
+                router.refresh()
+            } else {
+                toast.error(result.message ?? 'Ocurrio un error')
+            }
+        })
+    }
 
     const departments = useMemo(() => categories.filter((c) => c.level === 'DEPARTMENT'), [categories])
     const categoryNodes = useMemo(() => categories.filter((c) => c.level === 'CATEGORY'), [categories])
@@ -206,12 +236,13 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                        <Link
-                            href={`/admin/products?category=${node.id}`}
+                        <button
+                            type="button"
+                            onClick={() => setProductsCategoryId(node.id)}
                             className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
                         >
                             Ver productos
-                        </Link>
+                        </button>
                         <button
                             type="button"
                             onClick={() => openEditModal(node)}
@@ -412,6 +443,82 @@ const CategoryManager = ({ categories }: { categories: AdminCategoryItem[] }) =>
                         Cancelar
                     </button>
                 </div>
+            </Modal>
+
+            <Modal
+                open={productsCategory !== null}
+                onClose={() => setProductsCategoryId(null)}
+                title={productsCategory ? `Productos de ${productsCategory.name}` : 'Productos'}
+                description="Asocia productos existentes a esta categoria o quita los que ya no correspondan."
+            >
+                <div className="space-y-2">
+                    {categoryProducts.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-500">
+                            Aun no hay productos asociados a esta categoria.
+                        </p>
+                    ) : (
+                        <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                            {categoryProducts.map((product) => (
+                                <li
+                                    key={product.id}
+                                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                                >
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <span className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                                            <Image
+                                                src={product.image}
+                                                alt={product.name}
+                                                fill
+                                                sizes="40px"
+                                                unoptimized={isUnoptimizedImage(product.image)}
+                                                className="object-cover"
+                                            />
+                                        </span>
+                                        <p className="truncate text-sm font-semibold text-slate-900">{product.name}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={isAssocPending}
+                                        onClick={() =>
+                                            runAssociation(
+                                                () => removeProductFromCategory(product.id),
+                                                'Asociacion eliminada',
+                                            )
+                                        }
+                                        className="shrink-0 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        Quitar
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                {otherProducts.length > 0 ? (
+                    <select
+                        value=""
+                        disabled={isAssocPending}
+                        onChange={(event) => {
+                            const productId = event.target.value
+                            if (productId && productsCategoryId) {
+                                runAssociation(
+                                    () => assignProductToCategory(productId, productsCategoryId),
+                                    'Producto asociado',
+                                )
+                            }
+                        }}
+                        className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        aria-label="Asociar un producto existente"
+                    >
+                        <option value="">+ Asociar un producto existente...</option>
+                        {otherProducts.map((product) => (
+                            <option key={product.id} value={product.id}>
+                                {product.name}
+                            </option>
+                        ))}
+                    </select>
+                ) : null}
             </Modal>
         </div>
     )

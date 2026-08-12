@@ -292,6 +292,21 @@ export const updateDemoProduct = (
   return updatedProduct
 }
 
+// Asocia un producto existente a una categoria distinta (usado desde "Ver productos" en Categorias).
+export const assignDemoProductCategory = (productId: string, categoryId: string) => {
+  const category = state.categories.find((item) => item.id === categoryId)
+  const product = state.products.find((item) => item.id === productId)
+  if (!category || !product) return null
+
+  const updatedProduct = { ...product, categoryId, category }
+  state.products = state.products.map((item) => (item.id === productId ? updatedProduct : item))
+  return updatedProduct
+}
+
+// Los productos demo siempre requieren una categoria, asi que quitar la asociacion
+// no esta soportado en modo demo (solo cuando hay conexion a la base de datos real).
+export const removeDemoProductCategory = (_productId: string) => null
+
 export const createDemoOrder = (data: {
   name: string
   phone: string

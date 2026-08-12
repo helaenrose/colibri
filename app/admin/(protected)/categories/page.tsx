@@ -2,7 +2,7 @@ import Heading from "@/components/ui/Heading"
 import CategoryManager from "@/components/categories/CategoryManager"
 import CategoryCsvImport from "@/components/categories/CategoryCsvImport"
 import { prisma } from "@/src/lib/prisma"
-import { getDemoCategories } from "@/src/demo/demo-store"
+import { getDemoCategories, getDemoProducts } from "@/src/demo/demo-store"
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +15,13 @@ export type AdminCategoryItem = {
     image: string | null
     parentId: string | null
     productCount: number
+}
+
+export type CategoryProductOption = {
+    id: string
+    name: string
+    image: string
+    categoryId: string | null
 }
 
 const getCategories = async (): Promise<AdminCategoryItem[]> => {
@@ -49,8 +56,26 @@ const getCategories = async (): Promise<AdminCategoryItem[]> => {
     }
 }
 
+// Todos los productos con su categoria actual, para el modal "Ver productos" de cada categoria.
+const getProductOptions = async (): Promise<CategoryProductOption[]> => {
+    try {
+        const products = await prisma.product.findMany({
+            orderBy: { name: 'asc' },
+            select: { id: true, name: true, image: true, categoryId: true },
+        })
+        return products
+    } catch {
+        return getDemoProducts().map((product) => ({
+            id: product.id,
+            name: product.name,
+            image: product.image,
+            categoryId: product.categoryId,
+        }))
+    }
+}
+
 const CategoriesPage = async () => {
-    const categories = await getCategories()
+    const [categories, products] = await Promise.all([getCategories(), getProductOptions()])
     const departmentCount = categories.filter((c) => c.level === 'DEPARTMENT').length
     const subcategoryCount = categories.filter((c) => c.level === 'SUBCATEGORY').length
 
@@ -79,7 +104,7 @@ const CategoriesPage = async () => {
 
             <CategoryCsvImport />
 
-            <CategoryManager categories={categories} />
+            <CategoryManager categories={categories} products={products} />
         </div>
     )
 }
