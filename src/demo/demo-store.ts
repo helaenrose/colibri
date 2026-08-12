@@ -250,8 +250,8 @@ export const getDemoPendingOrders = () => state.pendingOrders
 export const getDemoReadyOrders = () =>
   state.readyOrders.map((order) => ({
     ...order,
-    hasArchivedFinanceEntry: state.financeEntries.some(
-      (entry) => entry.orderId === order.id && entry.deletedAt !== null,
+    missingFinanceEntry: !state.financeEntries.some(
+      (entry) => entry.orderId === order.id && entry.deletedAt === null,
     ),
   }))
 
@@ -441,12 +441,36 @@ export const deleteDemoFinanceEntry = (id: string) => {
   return { ...entry, archived: false }
 }
 
-export const restoreDemoFinanceEntry = (orderId: string) => {
-  const entry = state.financeEntries.find((item) => item.orderId === orderId && item.deletedAt !== null)
-  if (!entry) return null
+// Recupera el ingreso de una orden completada: restaura el archivado si existe, o lo
+// crea desde cero si la orden nunca tuvo un ingreso registrado (p.ej. ordenes completadas
+// antes de existir el modulo de Finanzas).
+export const recoverDemoFinanceEntry = (orderId: string) => {
+  const activeEntry = state.financeEntries.find((item) => item.orderId === orderId && item.deletedAt === null)
+  if (activeEntry) return null
 
-  state.financeEntries = state.financeEntries.map((item) =>
-    item.id === entry.id ? { ...item, deletedAt: null } : item,
-  )
+  const archivedEntry = state.financeEntries.find((item) => item.orderId === orderId && item.deletedAt !== null)
+  if (archivedEntry) {
+    state.financeEntries = state.financeEntries.map((item) =>
+      item.id === archivedEntry.id ? { ...item, deletedAt: null } : item,
+    )
+    return archivedEntry
+  }
+
+  const order = state.readyOrders.find((item) => item.id === orderId)
+  if (!order) return null
+
+  const entry: DemoFinanceEntry = {
+    id: createId('demo-finance-income'),
+    type: 'INCOME',
+    amount: order.total,
+    description: `Orden completada - ${order.name}`,
+    category: 'Ventas',
+    date: order.orderReadyAt ?? new Date(),
+    orderId: order.id,
+    orderCustomerName: order.name,
+    deletedAt: null,
+    createdAt: new Date(),
+  }
+  state.financeEntries = [entry, ...state.financeEntries]
   return entry
 }

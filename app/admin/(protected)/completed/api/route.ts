@@ -30,17 +30,18 @@ export const GET = async () => {
       }
     })
 
-    // Se marca si el ingreso asociado fue archivado (eliminado desde Finanzas) para
-    // poder ofrecer la opcion de restaurarlo desde la orden.
-    const archivedEntries = await prisma.financeEntry.findMany({
-      where: { orderId: { in: orders.map((order) => order.id) }, deletedAt: { not: null } },
+    // Se marca si la orden no tiene un ingreso activo en Finanzas: ya sea porque fue
+    // archivado (eliminado) o porque nunca se creo (p.ej. ordenes completadas antes de
+    // existir este modulo), para poder ofrecer la opcion de recuperarlo desde la orden.
+    const activeEntries = await prisma.financeEntry.findMany({
+      where: { orderId: { in: orders.map((order) => order.id) }, deletedAt: null },
       select: { orderId: true },
     })
-    const archivedOrderIds = new Set(archivedEntries.map((entry) => entry.orderId))
+    const activeOrderIds = new Set(activeEntries.map((entry) => entry.orderId))
 
     const ordersWithFinanceState = orders.map((order) => ({
       ...order,
-      hasArchivedFinanceEntry: archivedOrderIds.has(order.id),
+      missingFinanceEntry: !activeOrderIds.has(order.id),
     }))
 
     return Response.json(ordersWithFinanceState)
