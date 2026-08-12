@@ -4,7 +4,7 @@ import { OrderWithProducts } from '@/src/types'
 import React from 'react'
 import OrderInfo from './OrderInfo'
 import DeleteOrderButton from './DeleteOrderButton'
-import RestoreFinanceEntryButton from './RestoreFinanceEntryButton'
+import RecoverFinanceEntryButton from './RecoverFinanceEntryButton'
 
 interface LatestOrderItemProps {
     order: OrderWithProducts
@@ -43,7 +43,7 @@ const LatestOrderItem = ({ order, index }: LatestOrderItemProps) => {
 
             <OrderInfo order={order} />
 
-            {order.hasArchivedFinanceEntry ? <RestoreFinanceEntryButton orderId={order.id} /> : null}
+            {order.missingFinanceEntry ? <RecoverFinanceEntryButton orderId={order.id} /> : null}
 
             <DeleteOrderButton orderId={order.id} mutateKey="/admin/completed/api" />
         </article>
